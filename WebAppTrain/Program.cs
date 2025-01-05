@@ -3,7 +3,8 @@ using WebApiApp.LogInfrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-LogServiceConfigurator.Configure();
+var logConfigurator = new LogServiceConfigurator(builder.Configuration);
+logConfigurator.Configure();
 
 // Add services to the container.
 builder.Services.AddControllers();

@@ -1,12 +1,20 @@
 ﻿using Serilog;
+using Microsoft.Extensions.Configuration;
 
 namespace WebApiApp.LogInfrastructure
 {
     public class LogServiceConfigurator
     {
-        public static void Configure()
+        private readonly IConfiguration _config;
+
+        public LogServiceConfigurator(IConfiguration configuration)
         {
-            string logPath = "F:\\les_folder_csh\\WebApiApp\\LogInfrastructure\\Logs\\";
+            _config = configuration;
+        }
+
+        public void Configure()
+        {
+            string logPath = _config["Files:LogPath"];
 
             if (!Directory.Exists(logPath))
             {
