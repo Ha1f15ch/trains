@@ -22,9 +22,10 @@ namespace WebApiApp.LogInfrastructure
             }
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.Console()
-                .WriteTo.File(Path.Combine(logPath, "log.txt"), rollingInterval: RollingInterval.Day)
+                .MinimumLevel.Verbose()
+                .WriteTo.Async(a => a.Console())
+                .WriteTo.Async(a => a.File(Path.Combine(logPath, "log.txt"), rollingInterval: RollingInterval.Day))
+                .WriteTo.Seq("https://localhost:5431")
                 .CreateLogger();
         }
     }
