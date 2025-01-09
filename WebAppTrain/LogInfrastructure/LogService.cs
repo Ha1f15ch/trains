@@ -11,12 +11,12 @@ namespace WebApiApp.LogInfrastructure
             _logger = logger;
         }
 
-        public void LogInformation(string message)
+        public void LogInformation(string message, string v)
         {
             Log.Information(message);
         }
 
-        public void LogError(string message, Exception ex)
+        public void LogError(string message, string v, string ex)
         {
             Log.Error(message, ex);
         }

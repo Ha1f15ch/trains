@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using WebApiApp.LogInfrastructure;
 using WebAppTrain.Controllers.Middlewares;
+using WebAppTrain.Repositories.Intefaces;
+using WebAppTrain.Repositories.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,7 @@ logConfigurator.Configure();
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LogService>();
+builder.Services.AddTransient<IExampleRepository, ExampleRepository>();
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
    .AddNegotiate();
 

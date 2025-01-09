@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebApiApp.LogInfrastructure;
+using WebAppTrain.Repositories.Intefaces;
 
 namespace WebApiApp.Controllers
 {
@@ -8,10 +9,13 @@ namespace WebApiApp.Controllers
     public class SimpleController : Controller
     {
         private readonly LogService _logService;
+        private readonly IExampleRepository _exampleRepository;
 
-        public SimpleController(LogService logService)
+        public SimpleController(LogService logService,
+                                IExampleRepository exampleRepository)
         {
             _logService = logService;
+            _exampleRepository = exampleRepository;
         }
 
         [HttpGet("start")]
@@ -19,15 +23,23 @@ namespace WebApiApp.Controllers
         {
             try
             {
-                _logService.LogInformation("Pезультат выполнения стартового метода");
+                _logService.LogInformation("Вызван метод - {MethodName}", nameof(Startmethod));
+                var items = _exampleRepository.GetItems();
+
+                _logService.LogInformation("Репозиторий, который был использован: {RepositoryMethod}", nameof(IExampleRepository.GetItems));
+
+                return Ok(items);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка при записи лога: {ex.Message}");
+                _logService.LogError("Ошибка при выполнении метода {MethodName}: {Message}", nameof(Startmethod), ex.Message);
 
+                return StatusCode(500, "Internal server error");
             }
-
-            return Ok("Страница метода Startmethod");
+            finally
+            {
+                _logService.LogInformation("Окончательное выполнение метода контроллера - Finally", "Значения нет");
+            }
         }
     }
 }
