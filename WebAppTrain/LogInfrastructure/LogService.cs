@@ -16,9 +16,19 @@ namespace WebApiApp.LogInfrastructure
             Log.Information(message);
         }
 
+        public void LogInformation(string message)
+        {
+            Log.Information($"{message}");
+        }
+
         public void LogError(string message, string v, string ex)
         {
             Log.Error(message, ex);
+        }
+
+        public void LogError(string message)
+        {
+            Log.Error($"{message}");
         }
     }
 }

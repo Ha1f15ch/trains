@@ -15,4 +15,8 @@
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
+  </ItemGroup>
+
 </Project>
