@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DatabaseEngine.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DatabaseEngine
 {
@@ -6,6 +7,6 @@ namespace DatabaseEngine
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        
+        public DbSet<User> Users { get; set; }
     }
 }
