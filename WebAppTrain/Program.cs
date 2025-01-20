@@ -1,4 +1,6 @@
 using DatabaseEngine;
+using DatabaseEngine.RepositoryStorage.Interfaces;
+using DatabaseEngine.RepositoryStorage.Repositories;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
 using WebApiApp.LogInfrastructure;
@@ -20,6 +22,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LogService>();
 builder.Services.AddTransient<IExampleRepository, ExampleRepository>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
    .AddNegotiate();
 

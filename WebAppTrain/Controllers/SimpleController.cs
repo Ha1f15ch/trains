@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DatabaseEngine.RepositoryStorage.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using WebApiApp.LogInfrastructure;
 using WebAppTrain.Repositories.Intefaces;
 
@@ -10,12 +11,15 @@ namespace WebApiApp.Controllers
     {
         private readonly LogService _logService;
         private readonly IExampleRepository _exampleRepository;
+        private readonly IUserRepository _userRepository;
 
-        public SimpleController(LogService logService,
-                                IExampleRepository exampleRepository)
+        public SimpleController(LogService logService
+                                ,IExampleRepository exampleRepository
+                                , IUserRepository userRepository)
         {
             _logService = logService;
             _exampleRepository = exampleRepository;
+            _userRepository = userRepository;
         }
 
         [HttpGet("start")]
@@ -39,6 +43,37 @@ namespace WebApiApp.Controllers
             finally
             {
                 _logService.LogInformation("Окончательное выполнение метода контроллера - Finally", "Значения нет");
+            }
+        }
+
+        [HttpGet("add-user")]
+        public async Task<IActionResult> CreateNewUserTestGetMethod(string name
+                                                      , string email
+                                                      , string password
+                                                      )
+        {
+            Console.WriteLine($"name = {name}, \nemail = {email}, \npassword = {password}");
+
+            return Ok(200);
+        }
+
+        [HttpPost("add-user")]
+        public async Task<IActionResult> CreateNewUser(string name
+                                                      , string email
+                                                      , string password
+                                                      )
+        {
+            Console.WriteLine($"name = {name}, \nemail = {email}, \npassword = {password}");
+
+            if(!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+            {
+                var result = await _userRepository.CreateNewUser(name, email, password, true, DateTime.UtcNow, DateTime.UtcNow, DateTime.MinValue);
+
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(404);
             }
         }
     }
