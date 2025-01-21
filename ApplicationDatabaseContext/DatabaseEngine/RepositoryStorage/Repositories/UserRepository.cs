@@ -2,6 +2,7 @@
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,20 +27,20 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             var parameters = new[]
             {
-                new Npgsql.NpgsqlParameter("@value_Name", name),
-                new Npgsql.NpgsqlParameter("@value_Email", email),
-                new Npgsql.NpgsqlParameter("@value_Password", password),
-                new Npgsql.NpgsqlParameter("@value_IsActove", isActive),
-                new Npgsql.NpgsqlParameter("@value_DCreate", dateCreate),
-                new Npgsql.NpgsqlParameter("@value_DUpdate", dateUpdate),
-                new Npgsql.NpgsqlParameter("@value_DDelete", dateDelete),
+                new NpgsqlParameter("@value_Name", NpgsqlTypes.NpgsqlDbType.Text) { Value = name },
+                new NpgsqlParameter("@value_Email", NpgsqlTypes.NpgsqlDbType.Text) { Value = email },
+                new NpgsqlParameter("@value_Password", NpgsqlTypes.NpgsqlDbType.Text) { Value = password },
+                new NpgsqlParameter("@value_IsActive", NpgsqlTypes.NpgsqlDbType.Boolean) { Value = isActive },
+                new NpgsqlParameter("@value_DCreate", NpgsqlTypes.NpgsqlDbType.Date) { Value = dateCreate },
+                new NpgsqlParameter("@value_DUpdate", NpgsqlTypes.NpgsqlDbType.Date) { Value = dateUpdate },
+                new NpgsqlParameter("@value_DDelete", NpgsqlTypes.NpgsqlDbType.Date) { Value = dateDelete }
             };
 
             try
             {
                 _logger.LogInformation("Выполнение ХП для создания записи User, вызван метод {CreateNewUser}", nameof(CreateNewUser));
 
-                await _appDbContext.Database.ExecuteSqlRawAsync("CALL insertUserData(@value_Name, @value_Email, @value_Password, @value_IsActive, @value_DCreate, @value_DUpdate, @value_DDelete)", parameters);
+                await _appDbContext.Database.ExecuteSqlRawAsync("CALL insertuserdata(@value_Name, @value_Email, @value_Password, @value_IsActive, @value_DCreate, @value_DUpdate, @value_DDelete)", parameters);
 
                 var newUser = await _appDbContext.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
 

@@ -16,7 +16,6 @@ namespace WebAppTrain.Controllers.Middlewares
             Log.Information("Запрос: {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
             await _next(httpContext);
             Log.Information("Ответ: {StatusCode}", httpContext.Response.StatusCode);
-
         }
     }
 }

@@ -27,16 +27,16 @@ namespace WebApiApp.Controllers
         {
             try
             {
-                _logService.LogInformation("Вызван метод - {MethodName}", nameof(Startmethod));
+                _logService.LogInformation($"Вызван метод - {Startmethod}", nameof(Startmethod));
                 var items = _exampleRepository.GetItems();
 
-                _logService.LogInformation("Репозиторий, который был использован: {RepositoryMethod}", nameof(IExampleRepository.GetItems));
+                _logService.LogInformation($"Репозиторий, который был использован: {nameof(IExampleRepository.GetItems)}", nameof(IExampleRepository.GetItems));
 
                 return Ok(items);
             }
             catch (Exception ex)
             {
-                _logService.LogError("Ошибка при выполнении метода {MethodName}: {Message}", nameof(Startmethod), ex.Message);
+                _logService.LogError($"Ошибка при выполнении метода {Startmethod}", nameof(Startmethod), ex.Message);
 
                 return StatusCode(500, "Internal server error");
             }
@@ -47,17 +47,6 @@ namespace WebApiApp.Controllers
         }
 
         [HttpGet("add-user")]
-        public async Task<IActionResult> CreateNewUserTestGetMethod(string name
-                                                      , string email
-                                                      , string password
-                                                      )
-        {
-            Console.WriteLine($"name = {name}, \nemail = {email}, \npassword = {password}");
-
-            return Ok(200);
-        }
-
-        [HttpPost("add-user")]
         public async Task<IActionResult> CreateNewUser(string name
                                                       , string email
                                                       , string password

@@ -24,8 +24,11 @@ namespace WebApiApp.LogInfrastructure
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Async(a => a.Console())
-                .WriteTo.Async(a => a.File(Path.Combine(logPath, "log.txt"), rollingInterval: RollingInterval.Day))
-                .WriteTo.Seq("https://localhost:5431")
+                .WriteTo.Async(a => 
+                    a.File(
+                        Path.Combine(logPath, "log.txt"),
+                        rollingInterval: RollingInterval.Day,
+                        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}"))
                 .CreateLogger();
         }
     }
