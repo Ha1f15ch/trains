@@ -65,5 +65,23 @@ namespace WebApiApp.Controllers
                 return BadRequest(404);
             }
         }
+
+        [HttpGet("get-all-users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userRepository.GetAllUsers();
+
+            return Ok(users);
+        }
+
+        [HttpGet("get-user-by-id/{userId}")]
+        public async Task<IActionResult> GetUserById(int userId)
+        {
+            var userById = await _userRepository.GetUserById(userId);
+
+            if (userById == null) return BadRequest(405);
+
+            return Ok(userById);
+        }
     }
 }

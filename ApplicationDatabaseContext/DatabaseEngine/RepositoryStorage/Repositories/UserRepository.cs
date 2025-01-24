@@ -3,8 +3,10 @@ using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,6 +56,52 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 throw;
             }
             
+        }
+
+        public async Task<List<User?>> GetAllUsers()
+        {
+            try
+            {
+                _logger.LogInformation($"Выполнение ХП для получения всех пользователей, вызван метод {nameof(GetAllUsers)}");
+
+                const string sqlQuery = "SELECT * FROM dbo.\"User\"";
+
+                using var connection = _appDbContext.Database.GetDbConnection();
+
+                await connection.OpenAsync();
+
+                var users = await connection.QueryAsync<User?>(sqlQuery);
+                
+                return users.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"При выполнении метода - {nameof(GetAllUsers)} возникла ошибка: {ex.Message}", ex);
+                throw;
+            }
+        }
+
+        public async Task<User?> GetUserById(int userId)
+        {
+            try
+            {
+                _logger.LogInformation($"Выполнение ХП для получения всех пользователей, вызван метод {nameof(GetUserById)}");
+
+                const string sqlQuery = "SELECT * FROM dbo.\"User\" WHERE \"Id\" = @Id";
+
+                using var connection = _appDbContext.Database.GetDbConnection();
+
+                await connection.OpenAsync();
+
+                var userById = await connection.QuerySingleOrDefaultAsync<User?>(sqlQuery, new { Id = userId });
+
+                return userById;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"При выполнении метода - {nameof(GetUserById)} возникла ошибка: {ex.Message}", ex);
+                throw;
+            }
         }
     }
 }
