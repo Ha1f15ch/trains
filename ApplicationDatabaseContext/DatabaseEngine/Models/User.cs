@@ -25,5 +25,7 @@ namespace DatabaseEngine.Models
         public DateTime DateCreate { get; set; }
         public DateTime DateUpdate { get; set; }
         public DateTime? DateDelete { get; set; }
+
+        public List<Subscription> Subscriptions { get; set; }
     }
 }
