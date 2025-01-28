@@ -25,13 +25,15 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
-                if(userId > 0)
+                var userExists = await _appDbContext.Users.AnyAsync(u => u.Id == userId);
+
+                if(userExists)
                 {
                     _logger.LogInformation($"{LogLevel.Information} - {GetUserSubscriptions} - {nameof(GetUserSubscriptions)} - Выполняется поиск подписок пользователя - {userId}.");
                     return await _appDbContext.Subscriptions.Where(sub => sub.UserId == userId).ToListAsync();
                 }
 
-                throw new ArgumentException($"Некорректн опередан параметр поиска userId = {userId}");
+                throw new ArgumentException($"Пользователь с ID {userId} не найден.");
             }
             catch (Exception ex)
             {
