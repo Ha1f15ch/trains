@@ -25,6 +25,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
+    <ProjectReference Include="..\Domain\BusinesEngine\BusinesEngine.csproj" />
+    <ProjectReference Include="..\Shared\DTOs\DTOs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Handlers\" />
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,10 @@
-﻿using DatabaseEngine.Models;
+﻿using MediatR;
+using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DTOs;
+using BusinesEngine.Events;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
@@ -14,11 +12,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     {
         private readonly AppDbContext _appDbContext;
         private readonly ILogger<ISubscriptionRepository> _logger;
+        private readonly IMediator _mediator;
 
-        public SubscriptionRepository(AppDbContext appDbContext, ILogger<ISubscriptionRepository> logger)
+        public SubscriptionRepository(AppDbContext appDbContext, ILogger<ISubscriptionRepository> logger, IMediator mediator)
         {
             _appDbContext = appDbContext;
             _logger = logger;
+            _mediator = mediator;
         }
 
         public async Task<List<Subscription>> GetUserSubscriptions(int userId)
@@ -64,6 +64,15 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                         await _appDbContext.AddAsync(newSubscription);
                         await _appDbContext.SaveChangesAsync();
+
+                        var subscriptionDto = new SubscriptionDto
+                        {
+                            UserId = newSubscription.UserId,
+                            BookId = newSubscription.BookId,
+                            SubscriptionDate = newSubscription.SubscriptionDate
+                        };
+
+                        await _mediator.Publish(new SubscriptionCreatedEvent(subscriptionDto));
 
                         return newSubscription;
                     }
