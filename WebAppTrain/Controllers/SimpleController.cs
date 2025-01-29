@@ -1,7 +1,6 @@
 ﻿using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using WebApiApp.LogInfrastructure;
-using WebAppTrain.Repositories.Intefaces;
 
 namespace WebApiApp.Controllers
 {
@@ -10,40 +9,16 @@ namespace WebApiApp.Controllers
     public class SimpleController : Controller
     {
         private readonly LogService _logService;
-        private readonly IExampleRepository _exampleRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ISubscriptionRepository _subscriptionRepository;
 
         public SimpleController(LogService logService
-                                ,IExampleRepository exampleRepository
-                                , IUserRepository userRepository)
+                                , IUserRepository userRepository
+                                , ISubscriptionRepository subscriptionRepository)
         {
             _logService = logService;
-            _exampleRepository = exampleRepository;
             _userRepository = userRepository;
-        }
-
-        [HttpGet("start")]
-        public IActionResult Startmethod()
-        {
-            try
-            {
-                _logService.LogInformation($"Вызван метод - {Startmethod}", nameof(Startmethod));
-                var items = _exampleRepository.GetItems();
-
-                _logService.LogInformation($"Репозиторий, который был использован: {nameof(IExampleRepository.GetItems)}", nameof(IExampleRepository.GetItems));
-
-                return Ok(items);
-            }
-            catch (Exception ex)
-            {
-                _logService.LogError($"Ошибка при выполнении метода {Startmethod}", nameof(Startmethod), ex.Message);
-
-                return StatusCode(500, "Internal server error");
-            }
-            finally
-            {
-                _logService.LogInformation("Окончательное выполнение метода контроллера - Finally", "Значения нет");
-            }
+            _subscriptionRepository = subscriptionRepository;
         }
 
         [HttpGet("add-user")]
@@ -82,6 +57,24 @@ namespace WebApiApp.Controllers
             if (userById == null) return BadRequest(405);
 
             return Ok(userById);
+        }
+
+        [HttpPost("subscribe")]
+        public async Task<IActionResult> Subscribe(int userId, int bookId)
+        {
+            var subscription = await _subscriptionRepository.SubscribeUserToBook(userId, bookId);
+
+            if (subscription == null) return BadRequest("Подписаться на книгу не получилось");
+
+            return Ok(subscription);
+        }
+
+        [HttpGet("subscriptions/{userId}")]
+        public async Task<IActionResult> GetSubscriptions(int userId)
+        {
+            var subscriptions = await _subscriptionRepository.GetUserSubscriptions(userId);
+
+            return Ok(subscriptions);
         }
     }
 }
