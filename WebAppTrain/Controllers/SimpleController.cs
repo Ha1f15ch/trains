@@ -21,7 +21,7 @@ namespace WebApiApp.Controllers
             _subscriptionRepository = subscriptionRepository;
         }
 
-        [HttpGet("add-user")]
+        [HttpPost("add-user")]
         public async Task<IActionResult> CreateNewUser(string name
                                                       , string email
                                                       , string password
@@ -66,7 +66,12 @@ namespace WebApiApp.Controllers
 
             if (subscription == null) return BadRequest("Подписаться на книгу не получилось");
 
-            return Ok(subscription);
+            return Ok(new
+            {
+                Message = "Подписка успешно создана.",
+                Subscription = subscription,
+                Notification = "Уведомление будет отправлено через 5 секунд."
+            });
         }
 
         [HttpGet("subscriptions/{userId}")]
