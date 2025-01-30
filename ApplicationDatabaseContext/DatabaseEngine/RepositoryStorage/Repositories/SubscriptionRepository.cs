@@ -74,6 +74,8 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                         await _mediator.Publish(new SubscriptionCreatedEvent(subscriptionDto));
 
+                        _logger.LogInformation($"{LogLevel.Information} - {SubscribeUserToBook} - {nameof(SubscribeUserToBook)} - Выполняется оповещение пользователя {userId} о том, что подписка на книгу {bookId} выполнена успешно. Была создана запись подписки - {subscriptionDto} - {nameof(subscriptionDto)}");
+
                         return newSubscription;
                     }
 

@@ -25,6 +25,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             _logger = logger;
         }
 
+        // использовалась параметризированная хранимая процедура, написанная в pg admin 4
         public async Task<User> CreateNewUser(string name, string email, string password, bool isActive, DateTime dateCreate, DateTime dateUpdate, DateTime dateDelete)
         {
             var parameters = new[]
@@ -58,6 +59,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             
         }
 
+        // использовался Dapper
         public async Task<List<User?>> GetAllUsers()
         {
             try
@@ -81,6 +83,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
         }
 
+        // использовался Dapper
         public async Task<User?> GetUserById(int userId)
         {
             try

@@ -1,4 +1,5 @@
-﻿using DatabaseEngine.RepositoryStorage.Interfaces;
+﻿using DatabaseEngine.Models;
+using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using WebApiApp.LogInfrastructure;
 
@@ -80,6 +81,14 @@ namespace WebApiApp.Controllers
             var subscriptions = await _subscriptionRepository.GetUserSubscriptions(userId);
 
             return Ok(subscriptions);
+        }
+
+        [HttpGet("get-all-books")]
+        public async Task<IActionResult> GetAllBooks()
+        {
+
+
+            return Ok();
         }
     }
 }
