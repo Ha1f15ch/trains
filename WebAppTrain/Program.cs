@@ -4,6 +4,7 @@ using DatabaseEngine.RepositoryStorage.Repositories;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using WebApiApp.LogInfrastructure;
 using WebAppTrain.Controllers.Middlewares;
 
@@ -20,7 +21,12 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Get
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
 );
-builder.Services.AddControllers();
+// Нужно для того, чтобы возвращаемые объекты - типа моделей из БД (у которых есть референсные значения, навигационные свойства) не зацикливались сами на себя 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    });
 //swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(
@@ -36,6 +42,7 @@ builder.Services.AddSwaggerGen(
 builder.Services.AddSingleton<LogService>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
    .AddNegotiate();
 

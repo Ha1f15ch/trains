@@ -25,8 +25,8 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 if (string.IsNullOrEmpty(title))
                 {
-                    _logger.LogWarning("Название книги не может быть пустым.");
-                    throw new ArgumentException("Название книги не может быть пустым.", nameof(title));
+                    _logger.LogWarning($"Название книги не может быть пустым. {nameof(title)}");
+                    return null;
                 }
 
                 if (updateDate == default)

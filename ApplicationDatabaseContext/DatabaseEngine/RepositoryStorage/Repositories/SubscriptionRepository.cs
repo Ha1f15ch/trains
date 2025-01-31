@@ -59,7 +59,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                         {
                             UserId = userId,
                             BookId = bookId,
-                            SubscriptionDate = DateTime.Now,
+                            SubscriptionDate = DateTime.UtcNow,
                         };
 
                         await _appDbContext.AddAsync(newSubscription);
@@ -86,7 +86,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch(Exception ex)
             {
-                _logger.LogError($"{LogLevel.Error} - {GetUserSubscriptions} - {nameof(GetUserSubscriptions)} - Возникла ошибка при выполнении метода создания подписки пользователя {userId} на книгу - {bookId}. Ошибка - {ex.Message}");
+                _logger.LogError($"{LogLevel.Error} - {SubscribeUserToBook} - {nameof(SubscribeUserToBook)} - Возникла ошибка при выполнении метода создания подписки пользователя {userId} на книгу - {bookId}. Ошибка - {ex.Message}");
                 throw;
             }
         }

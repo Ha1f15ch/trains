@@ -12,14 +12,17 @@ namespace WebApiApp.Controllers
         private readonly LogService _logService;
         private readonly IUserRepository _userRepository;
         private readonly ISubscriptionRepository _subscriptionRepository;
+        private readonly IBookRepository _bookRepository;
 
         public SimpleController(LogService logService
                                 , IUserRepository userRepository
-                                , ISubscriptionRepository subscriptionRepository)
+                                , ISubscriptionRepository subscriptionRepository
+                                , IBookRepository bookRepository)
         {
             _logService = logService;
             _userRepository = userRepository;
             _subscriptionRepository = subscriptionRepository;
+            _bookRepository = bookRepository;
         }
 
         [HttpPost("add-user")]
@@ -86,9 +89,29 @@ namespace WebApiApp.Controllers
         [HttpGet("get-all-books")]
         public async Task<IActionResult> GetAllBooks()
         {
+            var books = await _bookRepository.GetAllBooks();
 
+            return Ok(books);
+        }
 
-            return Ok();
+        [HttpPost("get-books-by/{title}")]
+        public async Task<IActionResult> GetBooksByTitle(string title)
+        {
+            var booksByTitle = await _bookRepository.GetBookByName(title);
+
+            if (booksByTitle == null) return BadRequest("Для поиска переданы некорректные данные или в системе нет подходящих записей.");
+
+            return Ok(booksByTitle);
+        }
+
+        [HttpPost("crate-new-book")]
+        public async Task<IActionResult> CreateNewBook(string title, string? description, string? author, int? countList, string? createdAt)
+        {
+            var newBook = await _bookRepository.CreateNewBook(title, true, description, author, countList, createdAt, DateTime.UtcNow);
+
+            if (newBook == null) return BadRequest("Для создания записи Book переданы некорректные данные. попробуйте позднее");
+
+            return Ok(newBook);
         }
     }
 }
