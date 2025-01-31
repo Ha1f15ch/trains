@@ -8,7 +8,7 @@ namespace DatabaseEngine.Models
     {
         public Book()
         {
-            
+            Subscriptions = new List<Subscription>();
         }
 
         [Key]

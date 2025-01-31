@@ -17,9 +17,56 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             _logger = logger;
         }
 
-        public Task<Book?> CreateNewBook(string title, bool isActive, string? description, string? author, int? countList, string? createdAt, DateTime updateDate)
+        public async Task<Book?> CreateNewBook(string title, bool isActive, string? description, string? author, int? countList, string? createdAt, DateTime updateDate)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _logger.LogInformation("Создание записи Book, используя метод {MethodName}. Параметры: Title = {Title}, IsActive = {IsActive}, Description = {Description}, Author = {Author}, CountLists = {CountLists}, CreatedAt = {CreatedAt}, UpdatedAt = {UpdatedAt}", nameof(CreateNewBook), title, isActive, description, author, countList, createdAt, updateDate);
+
+                if (string.IsNullOrEmpty(title))
+                {
+                    _logger.LogWarning("Название книги не может быть пустым.");
+                    throw new ArgumentException("Название книги не может быть пустым.", nameof(title));
+                }
+
+                if (updateDate == default)
+                {
+                    _logger.LogWarning("Дата обновления не указана.");
+                    return null;
+                }
+
+                //проверить, есть ли уже такие записи по title
+                var existedBook = await _context.Books.FirstOrDefaultAsync(x => x.Title == title);
+
+                if (existedBook is not null) 
+                {
+                    _logger.LogInformation($"Книга с названием '{title}' уже существует. Возвращена существующая книга.");
+                    return existedBook;
+                }
+
+                var newBook = new Book
+                {
+                    Title = title,
+                    IsActive = isActive,
+                    Description = description,
+                    Author = author,
+                    CountLists = countList,
+                    CreatedAt = createdAt,
+                    UpdatedAt = updateDate
+                };
+
+                await _context.Books.AddAsync(newBook);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Запись книги была создана. newBook = {nameof(newBook)}. Где newBook.Title = {newBook.Title}\nnewBook.IsActive = {newBook.IsActive}\nnewBook.Description = {newBook.Description}\nnewBook.Author = {newBook.Author}\nnewBook.CountLists = {newBook.CountLists}\nnewBook.CreatedAt = {newBook.CreatedAt}\nnewBook.UpdatedAt = {newBook.UpdatedAt}");
+
+                return newBook;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"При выполнении метода {nameof(CreateNewBook)} возникла ошибка: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<List<Book>> GetAllBooks()

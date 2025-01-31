@@ -13,7 +13,7 @@ namespace DatabaseEngine.Models
     {
         public User()
         {
-
+            Subscriptions = new List<Subscription>();
         }
 
         [Key]
