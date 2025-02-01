@@ -11,10 +11,10 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     public class SubscriptionRepository : ISubscriptionRepository
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ILogger<ISubscriptionRepository> _logger;
+        private readonly ILogger<SubscriptionRepository> _logger;
         private readonly IMediator _mediator;
 
-        public SubscriptionRepository(AppDbContext appDbContext, ILogger<ISubscriptionRepository> logger, IMediator mediator)
+        public SubscriptionRepository(AppDbContext appDbContext, ILogger<SubscriptionRepository> logger, IMediator mediator)
         {
             _appDbContext = appDbContext;
             _logger = logger;
