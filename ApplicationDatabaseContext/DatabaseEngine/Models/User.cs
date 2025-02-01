@@ -14,6 +14,7 @@ namespace DatabaseEngine.Models
         public User()
         {
             Subscriptions = new List<Subscription>();
+            ListNewsChannelsSubscribers = new List<NewsChannelsSubscribers>();
         }
 
         [Key]
@@ -27,5 +28,6 @@ namespace DatabaseEngine.Models
         public DateTime? DateDelete { get; set; }
 
         public List<Subscription> Subscriptions { get; set; }
+        public List<NewsChannelsSubscribers> ListNewsChannelsSubscribers { get; set; }
     }
 }
