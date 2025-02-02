@@ -1,11 +1,7 @@
 ﻿using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
@@ -20,29 +16,148 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             _logger = logger;
         }
 
-        public Task<NewsChannel> CreateNewNewsChannel(string name, string? description)
+        public async Task<NewsChannel?> CreateNewNewsChannel(string name, string? description)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _logger.LogInformation("Создание записи NewsChannel, используя метод {MethodName}. Параметры: name = {name}, Description = {Description}", nameof(CreateNewNewsChannel), name, description);
+
+                if(string.IsNullOrEmpty(name))
+                {
+                    _logger.LogWarning($"Название новостного канала не может быть пустым. {nameof(name)}");
+                    return null;
+                }
+
+                //Есть ли уже данная запись в БД
+                var existedNewsChannel = await GetNewsChannelByName(name);
+
+                if(existedNewsChannel is not null)
+                {
+                    _logger.LogInformation($"Новостной кканал с названием '{name}' уже существует. Возвращен существующий новостной канал. Id = {existedNewsChannel.Id}");
+                    return existedNewsChannel;
+                }
+
+                //Тогда создаем новый канал 
+                var newNewsChannel = new NewsChannel
+                {
+                    Name = name,
+                    Description = description,
+                    CountSubscribers = 0,
+                    DateCreated = DateTime.UtcNow
+                };
+
+                await _appDbContext.AddAsync(newNewsChannel);
+                await _appDbContext.SaveChangesAsync();
+
+                _logger.LogInformation($"Запись новостного канала была создана. newsChannel = {nameof(newNewsChannel)}. Где newNewsChannel.name = {newNewsChannel.Name}\nnewNewsChannel.Description = {newNewsChannel.Description}\nnewNewsChannel.CountSubscribers = {newNewsChannel.CountSubscribers}\nnewNewsChannel.DateCreated = {newNewsChannel.DateCreated}");
+
+                return newNewsChannel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"При выполнении метода {nameof(CreateNewNewsChannel)} возникла ошибка: {ex.Message}");
+                throw;
+            }
         }
 
-        public Task<List<NewsChannel>> GetAllNewsChannels()
+        public async Task<List<NewsChannel>?> GetAllNewsChannels()
         {
-            throw new NotImplementedException();
+            try
+            {
+                _logger.LogInformation($"Поиск всех новостных каналов, вызван метод {nameof(GetAllNewsChannels)}");
+
+                return await _appDbContext.NewsChannels.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"При выполнении метода {nameof(GetAllNewsChannels)} возникла ошибка: {ex.Message}");
+                throw;
+            }
         }
 
-        public Task<NewsChannel> GetNewsChannelById(int newsChannelId)
+        public async Task<NewsChannel?> GetNewsChannelById(int newsChannelId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (newsChannelId <= 0)
+                {
+                    _logger.LogWarning($"Некорректное значение id: {newsChannelId}. Ожидается положительное число.");
+                    return null;
+                }
+
+                _logger.LogInformation($"Новостного канала по id = {newsChannelId}, вызван метод {nameof(newsChannelId)}");
+
+                var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
+
+                if (newsChannel is null)
+                {
+                    _logger.LogWarning($"Новостной канал с id = {newsChannelId} не найдена.");
+                }
+
+                return newsChannel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"При выполнении метода {nameof(GetNewsChannelById)} возникла ошибка: {ex.Message}");
+                throw;
+            }
         }
 
-        public Task<NewsChannel> GetNewsChannelByName(string newsChannelName)
+        public async Task<NewsChannel?> GetNewsChannelByName(string newsChannelName)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (string.IsNullOrEmpty(newsChannelName))
+                {
+                    _logger.LogWarning($"Некорректное значение newsChannelName для поиска новостного канала: {newsChannelName}. Ожидается не null.");
+                    return null;
+                }
+
+                _logger.LogInformation($"Поиск новостного канала по названию = {newsChannelName}, вызван метод {nameof(GetNewsChannelByName)}");
+
+                var newsChannel = await _appDbContext.NewsChannels.SingleOrDefaultAsync(el => el.Name == newsChannelName);
+
+                if (newsChannel is null)
+                {
+                    _logger.LogWarning($"Новостного канала с названием = {newsChannelName} не найдено.");
+                }
+
+                return newsChannel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"При выполнении метода {nameof(GetNewsChannelByName)} возникла ошибка: {ex.Message}");
+                throw;
+            }
         }
 
-        public Task<List<NewsChannel>> GetNewsChannelsByPartName(string newsChannelName)
+        //Для поиска совпадающих по названию частично 
+        public async Task<List<NewsChannel>?> GetNewsChannelsByPartName(string newsChannelName)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (string.IsNullOrEmpty(newsChannelName))
+                {
+                    _logger.LogWarning($"Некорректное значение newsChannelName для поиска новостных каналов: {newsChannelName}. Ожидается не null.");
+                    return null;
+                }
+
+                _logger.LogInformation($"Поиск новостных каналов по названию = {newsChannelName}, вызван метод {nameof(GetNewsChannelsByPartName)}");
+
+                var newsChannel = await _appDbContext.NewsChannels.Where(el => el.Name.Contains(newsChannelName)).ToListAsync();
+
+                if (newsChannel is null)
+                {
+                    _logger.LogWarning($"Новостных каналов с названием = {newsChannelName} не найдено.");
+                }
+
+                return newsChannel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"При выполнении метода {nameof(GetNewsChannelsByPartName)} возникла ошибка: {ex.Message}");
+                throw;
+            }
         }
     }
 }

@@ -9,10 +9,10 @@ namespace DatabaseEngine.RepositoryStorage.Interfaces
 {
     public interface INewsChannelRepository
     {
-        public Task<NewsChannel> CreateNewNewsChannel(string name, string? description);
-        public Task<NewsChannel> GetNewsChannelById(int newsChannelId);
-        public Task<NewsChannel> GetNewsChannelByName(string newsChannelName);
-        public Task<List<NewsChannel>> GetAllNewsChannels();
-        public Task<List<NewsChannel>> GetNewsChannelsByPartName(string newsChannelName);
+        public Task<NewsChannel?> CreateNewNewsChannel(string name, string? description);
+        public Task<NewsChannel?> GetNewsChannelById(int newsChannelId);
+        public Task<NewsChannel?> GetNewsChannelByName(string newsChannelName);
+        public Task<List<NewsChannel>?> GetAllNewsChannels();
+        public Task<List<NewsChannel>?> GetNewsChannelsByPartName(string newsChannelName);
     }
 }
