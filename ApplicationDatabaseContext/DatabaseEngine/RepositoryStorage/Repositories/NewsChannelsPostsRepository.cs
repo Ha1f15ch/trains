@@ -20,22 +20,52 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             _logger = logger;
         }
 
-        public Task<NewsChannelsPosts> CreateNewNewsChannelsPost(int newChannelId, string titlePost, string bodyPost, string footerPost, string authorPost, string? surceImage)
+        public async Task<NewsChannelsPosts?> CreateNewNewsChannelsPost(int newChannelId, string titlePost, string bodyPost, string? footerPost, string authorPost, string? surceImage)
+        {
+            var newsChannel = await _appDbContext.NewsChannels.FindAsync(newChannelId);
+
+            if(newsChannel is null)
+            {
+                _logger.LogWarning($"Некорректное значение id новостного канала - {nameof(newsChannel)}");
+                return null;
+            }
+
+            if(string.IsNullOrEmpty(titlePost) || string.IsNullOrEmpty(bodyPost) || string.IsNullOrEmpty(authorPost))
+            {
+                _logger.LogWarning($"Некорректное значение для параметра titlePost = {titlePost} - {nameof(titlePost)}\nили bodyPost = {bodyPost} - {nameof(bodyPost)}\nили authorPost = {authorPost} - {nameof(authorPost)}\nили");
+                return null;
+            }
+
+            var newPost = new NewsChannelsPosts 
+            {
+				NewsChannelId = newsChannel.Id,
+                TitlePost = titlePost,
+                BodyPost = bodyPost,
+                FooterPost = footerPost,
+                AuthorPost = authorPost,
+                SurceImage = surceImage,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _appDbContext.NewsChannelsPosts.AddAsync(newPost);
+            await _appDbContext.SaveChangesAsync();
+
+            _logger.LogInformation($"Запись новостного сообщения была создана. newPost = {nameof(newPost)}. Где newPost.NewsChannelId = {newPost.NewsChannelId}\nnewPost.TitlePost = {newPost.TitlePost}\nnewPost.BodyPost = {newPost.BodyPost}\nnewPost.FooterPost = {newPost.FooterPost}\nnewPost.AuthorPost = {newPost.AuthorPost}\nnewPost.SurceImage = {newPost.SurceImage}\nnewPost.CreatedDate = {newPost.CreatedDate}");
+
+		    return newPost;
+        }
+
+        public async Task<List<NewsChannelsPosts>?> GetAllPosts()
         {
             throw new NotImplementedException();
         }
 
-        public Task<List<NewsChannelsPosts>> GetAllPosts()
+        public async Task<List<NewsChannelsPosts>?> GetAllPostsByNewsChannelId(int newsChannelId)
         {
             throw new NotImplementedException();
         }
 
-        public Task<List<NewsChannelsPosts>> GetAllPostsByNewsChannelId(int newsChannelId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<NewsChannelsPosts>> GetAllPostsByPartTitle(string titlePost)
+        public async Task<List<NewsChannelsPosts>?> GetAllPostsByPartTitle(string titlePost)
         {
             throw new NotImplementedException();
         }
