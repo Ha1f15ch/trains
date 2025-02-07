@@ -20,9 +20,49 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             _logger = logger;
         }
 
-        public Task<NewsChannelsSubscribers> SubscribeUserToNewsChannel(int userId, int newsChannelId)
+        public async Task<NewsChannelsSubscribers> SubscribeUserToNewsChannel(int userId, int newsChannelId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _logger.LogInformation($"Выполняем поиск по id пользователя {userId} и новостной канал {newsChannelId}");
+
+                var user = await _appDbContext.Users.FindAsync(userId);
+                var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
+
+                if(user is null)
+                {
+                    _logger.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному userId = {userId} пользователь найлден небыл");
+                    throw new NullReferenceException($"Пользователь по userId небыл найден - {user} - {nameof(user)}");
+                }
+
+				if (newsChannel is null)
+				{
+					_logger.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному newsChannelId = {newsChannel} новостной канал найлден небыл");
+					throw new NullReferenceException($"Новостной канал по newsChannelId небыл найден - {newsChannel} - {nameof(newsChannel)}");
+				}
+
+                var subscriberValue = new NewsChannelsSubscribers
+                {
+                    NewsChannelId = newsChannelId,
+                    UserId = userId,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _logger.LogInformation($"{nameof(SubscribeUserToNewsChannel)} \n Создаем запись подписки - {subscriberValue}");
+
+                await _appDbContext.NewsChannelsSubscribers.AddAsync( subscriberValue );
+
+                _logger.LogInformation($"Успешно добавлено");
+
+                await _appDbContext.SaveChangesAsync();
+
+                return subscriberValue;
+			}
+            catch (Exception ex)
+            {
+                _logger.LogError($"{SubscribeUserToNewsChannel} - {nameof(SubscribeUserToNewsChannel)} - {ex.Message} - Ошибка при выполнении подписки пользователя на новостной канал");
+                throw;
+            }
         }
     }
 }
