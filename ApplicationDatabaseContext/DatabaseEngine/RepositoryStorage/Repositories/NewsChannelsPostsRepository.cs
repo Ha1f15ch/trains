@@ -1,5 +1,6 @@
 ﻿using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -57,12 +58,40 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
         public async Task<List<NewsChannelsPosts>?> GetAllPosts()
         {
-            throw new NotImplementedException();
-        }
+			try
+			{
+				_logger.LogInformation($"Поиск всех постов, написанных новостными каналами, вызван метод {nameof(GetAllPosts)}");
+
+				return await _appDbContext.NewsChannelsPosts.ToListAsync();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, $"При выполнении метода {nameof(GetAllPosts)} возникла ошибка: {ex.Message}");
+				throw;
+			}
+		}
 
         public async Task<List<NewsChannelsPosts>?> GetAllPostsByNewsChannelId(int newsChannelId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
+
+                if(newsChannel is null)
+                {
+                    _logger.LogWarning($"Передано некорректное значение id новостного канала - {newsChannelId} - {nameof(newsChannelId)}. Не найден новостной канал п означению - {newsChannelId}");
+                    return null;
+                }
+
+                _logger.LogInformation($"Поиск постов для новостного канала - {newsChannel} - {nameof(newsChannel)}");
+                return await _appDbContext.NewsChannelsPosts.Where(el => el.NewsChannelId == newsChannel.Id).ToListAsync();
+
+            }
+            catch(Exception ex)
+            {
+                _logger.LogWarning($"Возникла ошибка при поиске постов для новостного канала id = {newsChannelId} - {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<List<NewsChannelsPosts>?> GetAllPostsByPartTitle(string titlePost)
