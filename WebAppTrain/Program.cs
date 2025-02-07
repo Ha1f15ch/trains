@@ -43,6 +43,9 @@ builder.Services.AddSingleton<LogService>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddTransient<IBookRepository, BookRepository>();
+builder.Services.AddTransient<INewsChannelRepository, NewsChannelRepository>();
+builder.Services.AddTransient<INewsChannelsPostsRepository, NewsChannelsPostsRepository>();
+builder.Services.AddTransient<INewsChannelsSubscribersRepository, NewsChannelsSubscribersRepository>();
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
    .AddNegotiate();
 
