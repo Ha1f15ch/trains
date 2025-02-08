@@ -45,7 +45,7 @@ namespace WebAppTrain.Controllers
 			return Ok(result);
 		}
 
-		[HttpGet("channel/find-by-partName/{partName}")]
+		[HttpPost("channel/find-by-partName/{partName}")]
 		public async Task<IActionResult> GetNewsChannelsByPartName(string partName)
 		{
 			var findedNewsChannels = await _newsChannelRepository.GetNewsChannelsByPartName(partName);
@@ -53,7 +53,7 @@ namespace WebAppTrain.Controllers
 			return Ok(findedNewsChannels);
 		}
 
-		[HttpGet("channel/find-by-name/{channelName}")]
+		[HttpPost("channel/find-by-name/{channelName}")]
 		public async Task<IActionResult> GetNewsChannelsByName(string channelName)
 		{
 			var findedNewsChannels = await _newsChannelRepository.GetNewsChannelByName(channelName);
