@@ -25,7 +25,7 @@ namespace WebAppTrain.Controllers
 		}
 
 		[HttpGet("channel/all")]
-		public async Task<IActionResult> GetAllnewsChannels()
+		public async Task<IActionResult> GetAllNewsChannels()
 		{
 			var result = await _newsChannelRepository.GetAllNewsChannels();
 
@@ -48,17 +48,17 @@ namespace WebAppTrain.Controllers
 		[HttpPost("channel/find-by-partName/{partName}")]
 		public async Task<IActionResult> GetNewsChannelsByPartName(string partName)
 		{
-			var findedNewsChannels = await _newsChannelRepository.GetNewsChannelsByPartName(partName);
+			var foundedNewsChannels = await _newsChannelRepository.GetNewsChannelsByPartName(partName);
 
-			return Ok(findedNewsChannels);
+			return Ok(foundedNewsChannels);
 		}
 
 		[HttpPost("channel/find-by-name/{channelName}")]
 		public async Task<IActionResult> GetNewsChannelsByName(string channelName)
 		{
-			var findedNewsChannels = await _newsChannelRepository.GetNewsChannelByName(channelName);
+			var foundedNewsChannels = await _newsChannelRepository.GetNewsChannelByName(channelName);
 
-			return Ok(findedNewsChannels);
+			return Ok(foundedNewsChannels);
 		}
 
 		[HttpPost("channel/create-new")]
@@ -88,8 +88,27 @@ namespace WebAppTrain.Controllers
 			return Ok(posts);
 		}
 
+		[HttpPost("channel/{channelId}/subscribe")]
+		public async Task<IActionResult> SubscribeToNewsChannel(int userId, int channelId)
+		{
+			_logService.LogInformation($"User with Id = {userId} подписывается на новостной канал с Id = {channelId}");
+
+			var resultSubscription = await _newsChannelsSubscribersRepository.SubscribeUserToNewsChannel(userId, channelId);
+
+			if(resultSubscription is null)
+			{
+				_logService.LogError($"{SubscribeToNewsChannel} - {nameof(SubscribeToNewsChannel)} - Подписка не была выполнена успешно. resultSubscription = {resultSubscription}");
+
+				return BadRequest(404);
+			}
+
+			//отправить событие - Вы подписались УРАА!!
+
+			return Ok(resultSubscription);
+		}
+
 		[HttpPost("posts-by-title/{partTitle}")]
-		public async Task<IActionResult> GetPostsByTitlePatr(string partTitle)
+		public async Task<IActionResult> GetPostsByTitlePart(string partTitle)
 		{
 			var postsByPart = await _newsChannelsPostsRepository.GetAllPostsByPartTitle(partTitle);
 			
@@ -99,7 +118,7 @@ namespace WebAppTrain.Controllers
 		[HttpPost("channel/{channelId}/create-post")]
 		public async Task<IActionResult> CreateNewNewsChannelPost(int channelId, string title, string bodyPost, string? footerPost, string authorPost, string? sourceImage)
 		{
-			_logService.LogInformation($"Создлаем запись для новостного канала");
+			_logService.LogInformation($"{CreateNewNewsChannelPost} - {nameof(CreateNewNewsChannelPost)} - Создаем запись для новостного канала");
 
 			var resultByCreate = await _newsChannelsPostsRepository.CreateNewNewsChannelsPost(channelId, title, bodyPost, footerPost, authorPost, sourceImage);
 
@@ -108,9 +127,9 @@ namespace WebAppTrain.Controllers
 				return BadRequest(404);
 			}
 
+			//Событие - оповещаем подписавшихся о том, что вышел новый пост.
+
 			return Ok(resultByCreate);
 		}
-
-
 	}
 }
