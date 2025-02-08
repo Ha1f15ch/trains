@@ -22,7 +22,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             _logger = logger;
         }
 
-        public async Task<NewsChannelsPosts?> CreateNewNewsChannelsPost(int newChannelId, string titlePost, string bodyPost, string? footerPost, string authorPost, string? surceImage)
+        public async Task<NewsChannelsPosts?> CreateNewNewsChannelsPost(int newChannelId, string titlePost, string bodyPost, string? footerPost, string authorPost, string? sourceImage)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 					BodyPost = bodyPost,
 					FooterPost = footerPost,
 					AuthorPost = authorPost,
-					SurceImage = surceImage,
+					SurceImage = sourceImage,
 					CreatedDate = DateTime.UtcNow
 				};
 
