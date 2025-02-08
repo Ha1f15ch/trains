@@ -1,4 +1,5 @@
-﻿using DatabaseEngine.RepositoryStorage.Interfaces;
+﻿using BusinesEngine.Events;
+using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Channels;
 using WebApiApp.LogInfrastructure;
@@ -9,19 +10,24 @@ namespace WebAppTrain.Controllers
 	[Route("main/v1/")]
 	public class ObserverController : Controller
 	{
+		private readonly NewsPublisher _newsPublisher = new();
+		private readonly LogSubscriber _logSubscriber;
+
 		private readonly IUserRepository _userRepository;
 		private readonly INewsChannelRepository _newsChannelRepository;
 		private readonly INewsChannelsPostsRepository _newsChannelsPostsRepository;
 		private readonly INewsChannelsSubscribersRepository _newsChannelsSubscribersRepository;
 		private readonly LogService _logService;
 
-		public ObserverController(IUserRepository userRepository, INewsChannelRepository newsChannelRepository, INewsChannelsPostsRepository newsChannelsPostsRepository, INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, LogService logService)
+		public ObserverController(IUserRepository userRepository, INewsChannelRepository newsChannelRepository, INewsChannelsPostsRepository newsChannelsPostsRepository, INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, LogService logService, ILogger<LogSubscriber> logger)
 		{
 			_logService = logService;
 			_userRepository = userRepository;
 			_newsChannelRepository = newsChannelRepository;
 			_newsChannelsPostsRepository = newsChannelsPostsRepository;
 			_newsChannelsSubscribersRepository = newsChannelsSubscribersRepository;
+			_logSubscriber = new LogSubscriber(logger);
+			_newsPublisher.Subscribe(_logSubscriber);
 		}
 
 		[HttpGet("channel/all")]
@@ -102,7 +108,8 @@ namespace WebAppTrain.Controllers
 				return BadRequest(404);
 			}
 
-			//отправить событие - Вы подписались УРАА!!
+			//отправить событие - Вы подписались
+			await _newsPublisher.NotifySubscribers($"Пользователь {userId} подписался на канал - {channelId}");
 
 			return Ok(resultSubscription);
 		}
@@ -126,8 +133,8 @@ namespace WebAppTrain.Controllers
 			{
 				return BadRequest(404);
 			}
-
-			//Событие - оповещаем подписавшихся о том, что вышел новый пост.
+			// Уведомляем подписчиков 
+			await _newsPublisher.NotifySubscribers($"новостной канал выпустил новый пост, скорее посмотрите. Канал - {channelId}. Заголовок - {title}");
 
 			return Ok(resultByCreate);
 		}

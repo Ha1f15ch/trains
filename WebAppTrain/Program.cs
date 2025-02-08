@@ -40,6 +40,7 @@ builder.Services.AddSwaggerGen(
         });
     });
 builder.Services.AddSingleton<LogService>();
+builder.Services.AddLogging();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddTransient<IBookRepository, BookRepository>();

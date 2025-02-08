@@ -31,14 +31,14 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 if(user is null)
                 {
-                    _logger.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному userId = {userId} пользователь найлден небыл");
-                    throw new NullReferenceException($"Пользователь по userId небыл найден - {user} - {nameof(user)}");
+                    _logger.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному userId = {userId} пользователь найден не был");
+                    throw new NullReferenceException($"Пользователь по userId не был найден - {user} - {nameof(user)}");
                 }
 
 				if (newsChannel is null)
 				{
-					_logger.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному newsChannelId = {newsChannel} новостной канал найлден небыл");
-					throw new NullReferenceException($"Новостной канал по newsChannelId небыл найден - {newsChannel} - {nameof(newsChannel)}");
+					_logger.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному newsChannelId = {newsChannel} новостной канал найден не был");
+					throw new NullReferenceException($"Новостной канал по newsChannelId не был найден - {newsChannel} - {nameof(newsChannel)}");
 				}
 
                 var subscriberValue = new NewsChannelsSubscribers
