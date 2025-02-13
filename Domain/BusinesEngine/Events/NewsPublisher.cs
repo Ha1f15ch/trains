@@ -1,4 +1,5 @@
 ﻿using BusinesEngine.Events.Interfaces;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +11,20 @@ namespace BusinesEngine.Events
 	public class NewsPublisher : INewsPublisher
 	{
 		private readonly List<INewsSubscriber> _subscribers = new();
+		private readonly List<IEmailSubscriber> _emailSubscribers = new();
 
 		public async Task NotifySubscribers(string message)
 		{
-			await Task.Run(() => 
+			await Task.Run(async () => 
 			{
-				foreach (INewsSubscriber subscriber in _subscribers)
+				foreach (var subscriber in _subscribers)
 				{
-					subscriber.Update(message);
+					await subscriber.Update(message);
+				}
+
+				foreach(var emailSubscriber in _emailSubscribers)
+				{
+					await emailSubscriber.Update(message);
 				}
 			});
 		}
@@ -26,7 +33,14 @@ namespace BusinesEngine.Events
 		{
 			await Task.Run(() =>
 			{
-				_subscribers.Add(subscriber);
+				if(subscriber is IEmailSubscriber emailSubscriber)
+				{
+					_emailSubscribers.Add(emailSubscriber);
+				}
+				else
+				{
+					_subscribers.Add(subscriber);
+				}
 			});
 		}
 
@@ -34,7 +48,14 @@ namespace BusinesEngine.Events
 		{
 			await Task.Run(() =>
 			{
-				_subscribers.Remove(subscriber);
+				if (subscriber is IEmailSubscriber emailSubscriber)
+				{
+					_emailSubscribers.Remove(emailSubscriber);
+				}
+				else
+				{
+					_subscribers.Remove(subscriber);
+				}
 			});
 		}
 	}

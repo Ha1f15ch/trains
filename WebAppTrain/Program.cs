@@ -1,3 +1,4 @@
+using BusinesEngine.Services;
 using DatabaseEngine;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using DatabaseEngine.RepositoryStorage.Repositories;
@@ -40,6 +41,7 @@ builder.Services.AddSwaggerGen(
         });
     });
 builder.Services.AddSingleton<LogService>();
+builder.Services.AddScoped<EmailNotificationService>();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<ISubscriptionRepository, SubscriptionRepository>();

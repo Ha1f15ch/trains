@@ -1,5 +1,6 @@
 ﻿using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -64,5 +65,22 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 throw;
             }
         }
-    }
+
+		public async Task<List<User>?> GetSubscribersByChannelId(int newsChannelId)
+		{
+			try
+			{
+				return await _appDbContext.NewsChannelsSubscribers
+					.Where(ncs => ncs.NewsChannelId == newsChannelId)
+					.Include(ncs => ncs.User) // Загрузка связи User для получения email
+					.Select(ncs => ncs.User).ToListAsync();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, $"Ошибка при получении подписчиков канала с Id = {newsChannelId}");
+				throw;
+			}
+		}
+
+	}
 }

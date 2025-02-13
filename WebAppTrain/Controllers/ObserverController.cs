@@ -1,4 +1,5 @@
 ﻿using BusinesEngine.Events;
+using BusinesEngine.Services;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Channels;
@@ -18,8 +19,9 @@ namespace WebAppTrain.Controllers
 		private readonly INewsChannelsPostsRepository _newsChannelsPostsRepository;
 		private readonly INewsChannelsSubscribersRepository _newsChannelsSubscribersRepository;
 		private readonly LogService _logService;
+		private readonly EmailNotificationService _emailNotificationService;
 
-		public ObserverController(IUserRepository userRepository, INewsChannelRepository newsChannelRepository, INewsChannelsPostsRepository newsChannelsPostsRepository, INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, LogService logService, ILogger<LogSubscriber> logger)
+		public ObserverController(IUserRepository userRepository, INewsChannelRepository newsChannelRepository, INewsChannelsPostsRepository newsChannelsPostsRepository, INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, LogService logService, ILogger<LogSubscriber> logger, EmailNotificationService emailNotificationService)
 		{
 			_logService = logService;
 			_userRepository = userRepository;
@@ -27,6 +29,7 @@ namespace WebAppTrain.Controllers
 			_newsChannelsPostsRepository = newsChannelsPostsRepository;
 			_newsChannelsSubscribersRepository = newsChannelsSubscribersRepository;
 			_logSubscriber = new LogSubscriber(logger);
+			_emailNotificationService = emailNotificationService;
 			_newsPublisher.Subscribe(_logSubscriber);
 		}
 
@@ -94,6 +97,14 @@ namespace WebAppTrain.Controllers
 			return Ok(posts);
 		}
 
+		[HttpGet("channel/{channelId}/subscribers")]
+		public async Task<IActionResult> GetNewsChannelSubscribers(int channelId)
+		{
+			var subscribers = await _newsChannelsSubscribersRepository.GetSubscribersByChannelId(channelId);
+
+			return Ok(subscribers);
+		}
+
 		[HttpPost("channel/{channelId}/subscribe")]
 		public async Task<IActionResult> SubscribeToNewsChannel(int userId, int channelId)
 		{
@@ -108,7 +119,14 @@ namespace WebAppTrain.Controllers
 				return BadRequest(404);
 			}
 
-			//отправить событие - Вы подписались
+			var user = await _userRepository.GetUserById(userId);
+			if(user != null && !string.IsNullOrEmpty(user.Email))
+			{
+				var emailSubscriber = new EmailSubscriber(user.Email);
+				await _newsPublisher.Subscribe(emailSubscriber);
+			}
+
+			//отправить событие - в логи о том, что пользователь подписался, на почту - конкретному пользователю
 			await _newsPublisher.NotifySubscribers($"Пользователь {userId} подписался на канал - {channelId}");
 
 			return Ok(resultSubscription);
@@ -133,8 +151,23 @@ namespace WebAppTrain.Controllers
 			{
 				return BadRequest(404);
 			}
-			// Уведомляем подписчиков 
+			// Уведомляем в логах 
 			await _newsPublisher.NotifySubscribers($"новостной канал выпустил новый пост, скорее посмотрите. Канал - {channelId}. Заголовок - {title}");
+
+			// Получаем email
+			var subscribers = await _newsChannelsSubscribersRepository.GetSubscribersByChannelId(channelId);
+
+			if(subscribers is not null)
+			{
+				foreach(var user in subscribers)
+				{
+					if(!string.IsNullOrEmpty(user.Email))
+					{
+						_logService.LogInformation($"выполняется оповещение пользователей через Email - {user.Email}");
+						await _emailNotificationService.SendEmailAsync(user.Email, "Новый пост в канале", $"Новостной канал с id = {channelId} опубликовал пост: \"{title}\".\n\n{bodyPost}");
+					}
+				}
+			}
 
 			return Ok(resultByCreate);
 		}
