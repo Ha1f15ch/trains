@@ -120,14 +120,15 @@ namespace WebAppTrain.Controllers
 			}
 
 			var user = await _userRepository.GetUserById(userId);
+
 			if(user != null && !string.IsNullOrEmpty(user.Email))
 			{
-				var emailSubscriber = new EmailSubscriber(user.Email);
-				await _newsPublisher.Subscribe(emailSubscriber);
-			}
+				//отправить событие - в логи о том, что пользователь подписался на новостной канал
+				await _newsPublisher.NotifySubscribers($"Пользователь {userId} подписался на канал - {channelId}");
 
-			//отправить событие - в логи о том, что пользователь подписался, на почту - конкретному пользователю
-			await _newsPublisher.NotifySubscribers($"Пользователь {userId} подписался на канал - {channelId}");
+				//Отправить письмо пользователю на почту о том, что он подписался
+				await _emailNotificationService.SendEmailAsync(user.Email, "Добро пожаловать !!!", $"Рады видеть на Вашем канале. Надеемся Вы найдете у Нас много интересной и полезной информации. Дальнейшая отправка новостей и оповещений будет выполняться на данную почту - {user.Email}");
+			}
 
 			return Ok(resultSubscription);
 		}
@@ -151,11 +152,14 @@ namespace WebAppTrain.Controllers
 			{
 				return BadRequest(404);
 			}
-			// Уведомляем в логах 
-			await _newsPublisher.NotifySubscribers($"новостной канал выпустил новый пост, скорее посмотрите. Канал - {channelId}. Заголовок - {title}");
 
 			// Получаем email
 			var subscribers = await _newsChannelsSubscribersRepository.GetSubscribersByChannelId(channelId);
+			
+			var subscribersEmailForLog = string.Join(", ", subscribers.Select(s => s.Email));
+
+			// Уведомляем в логах 
+			await _newsPublisher.NotifySubscribers($"новостной канал выпустил новый пост, - {channelId}. Заголовок - {title}. Список Email адресов пользователей - {subscribersEmailForLog}");
 
 			if(subscribers is not null)
 			{

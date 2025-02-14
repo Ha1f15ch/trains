@@ -53,9 +53,9 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 await _appDbContext.NewsChannelsSubscribers.AddAsync( subscriberValue );
 
-                _logger.LogInformation($"Успешно добавлено");
-
                 await _appDbContext.SaveChangesAsync();
+
+                _logger.LogInformation($"Успешно добавлено");
 
                 return subscriberValue;
 			}

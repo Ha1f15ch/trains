@@ -20,8 +20,6 @@ namespace BusinesEngine.Events
 
 		public async Task Update(string message)
 		{
-			await Task.Delay(5000);
-
 			await Task.Run(() =>
 			{
 				_logger.LogInformation($"Уведомление - {message}");
