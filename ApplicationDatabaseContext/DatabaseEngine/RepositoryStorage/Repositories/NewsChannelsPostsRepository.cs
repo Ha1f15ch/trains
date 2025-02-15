@@ -1,4 +1,5 @@
-﻿using DatabaseEngine.Models;
+﻿using BusinesEngine.Services.ServiceInterfaces;
+using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,12 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     public class NewsChannelsPostsRepository : INewsChannelsPostsRepository
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ILogger<NewsChannelsPostsRepository> _logger;
+        private readonly ILogService _logService;
 
-        public NewsChannelsPostsRepository(AppDbContext appDbContext, ILogger<NewsChannelsPostsRepository> logger)
+        public NewsChannelsPostsRepository(AppDbContext appDbContext, ILogService logService)
         {
             _appDbContext = appDbContext;
-            _logger = logger;
+            _logService = logService;
         }
 
         public async Task<NewsChannelsPosts?> CreateNewNewsChannelsPost(int newChannelId, string titlePost, string bodyPost, string? footerPost, string authorPost, string? sourceImage)
@@ -30,13 +31,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
 				if (newsChannel is null)
 				{
-					_logger.LogWarning($"Некорректное значение id новостного канала - {nameof(newsChannel)}");
+					_logService.LogWarning($"Некорректное значение id новостного канала - {nameof(newsChannel)}");
 					return null;
 				}
 
 				if (string.IsNullOrEmpty(titlePost) || string.IsNullOrEmpty(bodyPost) || string.IsNullOrEmpty(authorPost))
 				{
-					_logger.LogWarning($"Некорректное значение для параметра titlePost = {titlePost} - {nameof(titlePost)}\nили bodyPost = {bodyPost} - {nameof(bodyPost)}\nили authorPost = {authorPost} - {nameof(authorPost)}\nили");
+					_logService.LogWarning($"Некорректное значение для параметра titlePost = {titlePost} - {nameof(titlePost)}\nили bodyPost = {bodyPost} - {nameof(bodyPost)}\nили authorPost = {authorPost} - {nameof(authorPost)}\nили");
 					return null;
 				}
 
@@ -54,13 +55,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 				await _appDbContext.NewsChannelsPosts.AddAsync(newPost);
 				await _appDbContext.SaveChangesAsync();
 
-				_logger.LogInformation($"Запись новостного сообщения была создана. newPost = {nameof(newPost)}. Где newPost.NewsChannelId = {newPost.NewsChannelId}\nnewPost.TitlePost = {newPost.TitlePost}\nnewPost.BodyPost = {newPost.BodyPost}\nnewPost.FooterPost = {newPost.FooterPost}\nnewPost.AuthorPost = {newPost.AuthorPost}\nnewPost.SurceImage = {newPost.SurceImage}\nnewPost.CreatedDate = {newPost.CreatedDate}");
+				_logService.LogInformation($"Запись новостного сообщения была создана. newPost = {nameof(newPost)}. Где newPost.NewsChannelId = {newPost.NewsChannelId}\nnewPost.TitlePost = {newPost.TitlePost}\nnewPost.BodyPost = {newPost.BodyPost}\nnewPost.FooterPost = {newPost.FooterPost}\nnewPost.AuthorPost = {newPost.AuthorPost}\nnewPost.SurceImage = {newPost.SurceImage}\nnewPost.CreatedDate = {newPost.CreatedDate}");
 
 				return newPost;
 			}
             catch( Exception ex )
             {
-				_logger.LogError(ex, $"При выполнении метода {nameof(CreateNewNewsChannelsPost)} возникла ошибка: {ex.Message}");
+				_logService.LogError($"При выполнении метода {nameof(CreateNewNewsChannelsPost)} возникла ошибка: {ex.Message}");
 				throw;
 			}
         }
@@ -69,13 +70,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
 			try
 			{
-				_logger.LogInformation($"Поиск всех постов, написанных новостными каналами, вызван метод {nameof(GetAllPosts)}");
+				_logService.LogInformation($"Поиск всех постов, написанных новостными каналами, вызван метод {nameof(GetAllPosts)}");
 
 				return await _appDbContext.NewsChannelsPosts.ToListAsync();
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, $"При выполнении метода {nameof(GetAllPosts)} возникла ошибка: {ex.Message}");
+				_logService.LogError($"При выполнении метода {nameof(GetAllPosts)} возникла ошибка: {ex.Message}");
 				throw;
 			}
 		}
@@ -88,16 +89,16 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 if(newsChannel is null)
                 {
-                    _logger.LogWarning($"Передано некорректное значение id новостного канала - {newsChannelId} - {nameof(newsChannelId)}. Не найден новостной канал по значению id - {newsChannelId}");
+                    _logService.LogWarning($"Передано некорректное значение id новостного канала - {newsChannelId} - {nameof(newsChannelId)}. Не найден новостной канал по значению id - {newsChannelId}");
                     return null;
                 }
 
-                _logger.LogInformation($"Поиск постов для новостного канала - {newsChannel} - {nameof(newsChannel)}");
+                _logService.LogInformation($"Поиск постов для новостного канала - {newsChannel} - {nameof(newsChannel)}");
                 var listPosts = await _appDbContext.NewsChannelsPosts.Where(el => el.NewsChannelId == newsChannel.Id).ToListAsync();
 
                 if(!listPosts.Any())
                 {
-					_logger.LogWarning($"Постов от новостного канала с id = {newsChannelId} не найдено.");
+					_logService.LogWarning($"Постов от новостного канала с id = {newsChannelId} не найдено.");
 					return null;
                 }
 
@@ -105,7 +106,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch(Exception ex)
             {
-                _logger.LogError($"Возникла ошибка при поиске постов для новостного канала id = {newsChannelId} - {ex.Message}");
+                _logService.LogError($"Возникла ошибка при поиске постов для новостного канала id = {newsChannelId} - {ex.Message}");
                 throw;
             }
         }
@@ -116,23 +117,23 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             {
 				if (string.IsNullOrEmpty(titlePost))
 				{
-					_logger.LogWarning($"Некорректное значение titlePost поста новостного канала: {titlePost}. Ожидается не null.");
+					_logService.LogWarning($"Некорректное значение titlePost поста новостного канала: {titlePost}. Ожидается не null.");
 					return null;
 				}
 
-				_logger.LogInformation($"Поиск постов по заголовку = {titlePost}, вызван метод {nameof(GetAllPostsByPartTitle)}");
+				_logService.LogInformation($"Поиск постов по заголовку = {titlePost}, вызван метод {nameof(GetAllPostsByPartTitle)}");
                 var listPostByPartTitlePost = await _appDbContext.NewsChannelsPosts.Where(el => el.TitlePost.Contains(titlePost)).ToListAsync();
 
                 if(!listPostByPartTitlePost.Any())
                 {
-                    _logger.LogWarning($"Не найдено совпадений с заданной частью заголовка - {titlePost}");
+                    _logService.LogWarning($"Не найдено совпадений с заданной частью заголовка - {titlePost}");
                 }
 
                 return listPostByPartTitlePost;
 			}
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"При выполнении метода {nameof(GetAllPostsByPartTitle)} возникла ошибка: {ex.Message}");
+                _logService.LogError($"При выполнении метода {nameof(GetAllPostsByPartTitle)} возникла ошибка: {ex.Message}");
 
 				throw;
             }

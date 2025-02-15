@@ -1,4 +1,5 @@
-﻿using DatabaseEngine.Models;
+﻿using BusinesEngine.Services.ServiceInterfaces;
+using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using WebApiApp.LogInfrastructure;
@@ -9,15 +10,16 @@ namespace WebApiApp.Controllers
     [Route("main/")]
     public class SimpleController : Controller
     {
-        private readonly LogService _logService;
-        private readonly IUserRepository _userRepository;
+        private readonly ILogService _logService;
+		private readonly IUserRepository _userRepository;
         private readonly ISubscriptionRepository _subscriptionRepository;
         private readonly IBookRepository _bookRepository;
 
-        public SimpleController(LogService logService
-                                , IUserRepository userRepository
-                                , ISubscriptionRepository subscriptionRepository
-                                , IBookRepository bookRepository)
+        public SimpleController(
+            ILogService logService,
+			IUserRepository userRepository,
+            ISubscriptionRepository subscriptionRepository,
+            IBookRepository bookRepository)
         {
             _logService = logService;
             _userRepository = userRepository;

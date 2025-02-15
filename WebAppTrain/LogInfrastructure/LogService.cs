@@ -1,34 +1,30 @@
-﻿using Serilog;
+﻿using BusinesEngine.Services.ServiceInterfaces;
+using Serilog;
 
-namespace WebApiApp.LogInfrastructure
+namespace WebAppTrain.LogInfrastructure
 {
-    public class LogService
-    {
-        private readonly ILogger<LogService> _logger;
+	public class LogService : ILogService
+	{
+		private readonly Serilog.ILogger _logger = Log.Logger;
 
-        public LogService(ILogger<LogService> logger)
-        {
-            _logger = logger;
-        }
+		public void LogDebug(string message)
+		{
+			_logger.Debug($"|DEBUG| {message}");
+		}
 
-        public void LogInformation(string message, string v)
-        {
-            Log.Information(message);
-        }
+		public void LogError(string message)
+		{
+			_logger.Error($"|ERROR| {message}");
+		}
 
-        public void LogInformation(string message)
-        {
-            Log.Information($"{message}");
-        }
+		public void LogInformation(string message)
+		{
+			_logger.Information($"|INFO| {message}");
+		}
 
-        public void LogError(string message, string v, string ex)
-        {
-            Log.Error(message, ex);
-        }
-
-        public void LogError(string message)
-        {
-            Log.Error($"{message}");
-        }
-    }
+		public void LogWarning(string message)
+		{
+			_logger.Warning($"|WARN| {message}");
+		}
+	}
 }

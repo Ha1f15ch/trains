@@ -5,19 +5,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using DTOs;
 using BusinesEngine.Events;
+using BusinesEngine.Services.ServiceInterfaces;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
     public class SubscriptionRepository : ISubscriptionRepository
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ILogger<SubscriptionRepository> _logger;
+        private readonly ILogService _logService;
         private readonly IMediator _mediator;
 
-        public SubscriptionRepository(AppDbContext appDbContext, ILogger<SubscriptionRepository> logger, IMediator mediator)
+        public SubscriptionRepository(AppDbContext appDbContext, ILogService logService, IMediator mediator)
         {
             _appDbContext = appDbContext;
-            _logger = logger;
+            _logService = logService;
             _mediator = mediator;
         }
 
@@ -29,7 +30,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 if(userExists)
                 {
-                    _logger.LogInformation($"{LogLevel.Information} - {GetUserSubscriptions} - {nameof(GetUserSubscriptions)} - Выполняется поиск подписок пользователя - {userId}.");
+                    _logService.LogInformation($"{nameof(GetUserSubscriptions)} - Выполняется поиск подписок пользователя - {userId}.");
                     return await _appDbContext.Subscriptions.Where(sub => sub.UserId == userId).ToListAsync();
                 }
 
@@ -37,7 +38,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError($"{LogLevel.Error} - Возникла ошибка при выполнении метода поиска подписок - {GetUserSubscriptions} - {nameof(GetUserSubscriptions)} для пользователя {userId}. Ошибка - {ex.Message}");
+                _logService.LogError($"{nameof(GetUserSubscriptions)} - Возникла ошибка при выполнении метода поиска подписок для пользователя {userId}. Ошибка - {ex.Message}");
                 throw;
             }
         }
@@ -74,7 +75,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                         await _mediator.Publish(new SubscriptionCreatedEvent(subscriptionDto));
 
-                        _logger.LogInformation($"{LogLevel.Information} - {SubscribeUserToBook} - {nameof(SubscribeUserToBook)} - Выполняется оповещение пользователя {userId} о том, что подписка на книгу {bookId} выполнена успешно. Была создана запись подписки - {subscriptionDto} - {nameof(subscriptionDto)}");
+                        _logService.LogInformation($"{nameof(SubscribeUserToBook)} - Выполняется оповещение пользователя {userId} о том, что подписка на книгу {bookId} выполнена успешно. Была создана запись подписки - {subscriptionDto} - {nameof(subscriptionDto)}");
 
                         return newSubscription;
                     }
@@ -86,7 +87,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch(Exception ex)
             {
-                _logger.LogError($"{LogLevel.Error} - {SubscribeUserToBook} - {nameof(SubscribeUserToBook)} - Возникла ошибка при выполнении метода создания подписки пользователя {userId} на книгу - {bookId}. Ошибка - {ex.Message}");
+                _logService.LogError($"{nameof(SubscribeUserToBook)} - Возникла ошибка при выполнении метода создания подписки пользователя {userId} на книгу - {bookId}. Ошибка - {ex.Message}");
                 throw;
             }
         }

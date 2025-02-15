@@ -1,9 +1,12 @@
 ﻿using BusinesEngine.Events;
+using BusinesEngine.Events.Interfaces;
 using BusinesEngine.Services;
+using BusinesEngine.Services.ServiceInterfaces;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Channels;
 using WebApiApp.LogInfrastructure;
+using WebAppTrain.LogInfrastructure;
 
 namespace WebAppTrain.Controllers
 {
@@ -11,26 +14,38 @@ namespace WebAppTrain.Controllers
 	[Route("main/v1/")]
 	public class ObserverController : Controller
 	{
-		private readonly NewsPublisher _newsPublisher = new();
+		private readonly NewsPublisher _newsPublisher;
 		private readonly LogSubscriber _logSubscriber;
 
 		private readonly IUserRepository _userRepository;
 		private readonly INewsChannelRepository _newsChannelRepository;
 		private readonly INewsChannelsPostsRepository _newsChannelsPostsRepository;
 		private readonly INewsChannelsSubscribersRepository _newsChannelsSubscribersRepository;
-		private readonly LogService _logService;
+
 		private readonly EmailNotificationService _emailNotificationService;
 
-		public ObserverController(IUserRepository userRepository, INewsChannelRepository newsChannelRepository, INewsChannelsPostsRepository newsChannelsPostsRepository, INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, LogService logService, ILogger<LogSubscriber> logger, EmailNotificationService emailNotificationService)
+		private readonly ILogService _logService;
+
+		public ObserverController(
+			NewsPublisher newsPublisher,
+			LogSubscriber logSubscriber,
+			IUserRepository userRepository, 
+			INewsChannelRepository newsChannelRepository, 
+			INewsChannelsPostsRepository newsChannelsPostsRepository, 
+			INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, 
+			EmailNotificationService emailNotificationService, 
+			ILogService logService)
 		{
-			_logService = logService;
+			_newsPublisher = newsPublisher;
+			_newsPublisher.Subscribe(logSubscriber);
+
 			_userRepository = userRepository;
 			_newsChannelRepository = newsChannelRepository;
 			_newsChannelsPostsRepository = newsChannelsPostsRepository;
 			_newsChannelsSubscribersRepository = newsChannelsSubscribersRepository;
-			_logSubscriber = new LogSubscriber(logger);
+			
+			_logService = logService;
 			_emailNotificationService = emailNotificationService;
-			_newsPublisher.Subscribe(_logSubscriber);
 		}
 
 		[HttpGet("channel/all")]

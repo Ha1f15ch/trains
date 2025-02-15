@@ -10,19 +10,21 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinesEngine.Services.ServiceInterfaces;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ILogger<UserRepository> _logger;
+        private readonly ILogService _logService;
 
-        public UserRepository(AppDbContext appDbContext
-                              , ILogger<UserRepository> logger)
+        public UserRepository(
+            AppDbContext appDbContext,
+			ILogService logService)
         {
             _appDbContext = appDbContext;
-            _logger = logger;
+            _logService = logService;
         }
 
         // использовалась параметризированная хранимая процедура, написанная в pg admin 4
@@ -41,7 +43,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
             try
             {
-                _logger.LogInformation("Выполнение ХП для создания записи User, вызван метод {CreateNewUser}", nameof(CreateNewUser));
+                _logService.LogInformation($"{nameof(CreateNewUser)} - Выполнение ХП для создания записи User");
 
                 await _appDbContext.Database.ExecuteSqlRawAsync("CALL insertuserdata(@value_Name, @value_Email, @value_Password, @value_IsActive, @value_DCreate, @value_DUpdate, @value_DDelete)", parameters);
 
@@ -53,10 +55,9 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch(Exception ex)
             {
-                _logger.LogError($"при выполнении метода - {CreateNewUser} возникла ошибка {ex.Message}", nameof(CreateNewUser));
+                _logService.LogError($"{nameof(CreateNewUser)} - При выполнении метода - {CreateNewUser} возникла ошибка {ex.Message}");
                 throw;
             }
-            
         }
 
         // использовался Dapper
@@ -64,7 +65,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
-                _logger.LogInformation($"Выполнение ХП для получения всех пользователей, вызван метод {nameof(GetAllUsers)}");
+                _logService.LogInformation($"{nameof(GetAllUsers)} - Выполнение ХП для получения всех пользователей, вызван метод");
 
                 const string sqlQuery = "SELECT * FROM dbo.\"User\"";
 
@@ -78,7 +79,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError($"При выполнении метода - {nameof(GetAllUsers)} возникла ошибка: {ex.Message}", ex);
+                _logService.LogError($"{nameof(GetAllUsers)} - При выполнении метода возникла ошибка: {ex.Message}");
                 throw;
             }
         }
@@ -88,7 +89,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
-                _logger.LogInformation($"Выполнение ХП для получения всех пользователей, вызван метод {nameof(GetUserById)}");
+                _logService.LogInformation($"Выполнение ХП для получения всех пользователей, вызван метод {nameof(GetUserById)}");
 
                 const string sqlQuery = "SELECT * FROM dbo.\"User\" WHERE \"Id\" = @Id";
 
@@ -102,7 +103,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError($"При выполнении метода - {nameof(GetUserById)} возникла ошибка: {ex.Message}", ex);
+                _logService.LogError($"{nameof(GetUserById)} - При выполнении метода возникла ошибка: {ex.Message}");
                 throw;
             }
         }

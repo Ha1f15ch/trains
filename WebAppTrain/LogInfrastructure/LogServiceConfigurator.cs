@@ -14,7 +14,7 @@ namespace WebApiApp.LogInfrastructure
 
         public void Configure()
         {
-            string logPath = _config["Files:LogPath"];
+            string logPath = _config["Files:LogPath"] ?? "logs";
 
             if (!Directory.Exists(logPath))
             {
@@ -22,13 +22,13 @@ namespace WebApiApp.LogInfrastructure
             }
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.Async(a => a.Console())
-                .WriteTo.Async(a => 
-                    a.File(
-                        Path.Combine(logPath, "log.txt"),
-                        rollingInterval: RollingInterval.Day,
-                        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}"))
+                .MinimumLevel.Verbose() // уровень логирования
+                .WriteTo.Console() // в консоль
+                .WriteTo.File( // в файл
+                    Path.Combine(logPath, "log.txt"),
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Message}{NewLine}{Exception}"
+                )
                 .CreateLogger();
         }
     }

@@ -11,18 +11,18 @@ namespace BusinesEngine.Events
 {
 	public class LogSubscriber : INewsSubscriber
 	{
-		private readonly ILogger<LogSubscriber> _logger;
+		private readonly Serilog.ILogger _logger;
 
-		public LogSubscriber(ILogger<LogSubscriber> logger)
+		public LogSubscriber()
 		{
-			_logger = logger;
+			_logger = Log.Logger;
 		}
 
 		public async Task Update(string message)
 		{
 			await Task.Run(() =>
 			{
-				_logger.LogInformation($"Уведомление - {message}");
+				_logger.Information($"[Event] {message}");
 			});
 		}
 	}

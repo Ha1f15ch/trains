@@ -16,8 +16,4 @@
     <ProjectReference Include="..\..\Shared\DTOs\DTOs.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\ServiceInterfaces\" />
-  </ItemGroup>
-
 </Project>

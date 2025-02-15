@@ -7,7 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using WebApiApp.LogInfrastructure;
-using WebAppTrain.Controllers.Middlewares;
+using WebAppTrain.LogInfrastructure;
+using BusinesEngine.Events;
+using BusinesEngine.Services.ServiceInterfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +42,9 @@ builder.Services.AddSwaggerGen(
             Description = "API для практики и применения подходов и технологий из roadmap-a"
         });
     });
-builder.Services.AddSingleton<LogService>();
+builder.Services.AddSingleton<ILogService, LogService>();
+builder.Services.AddScoped<LogSubscriber>();
+builder.Services.AddScoped<NewsPublisher>();
 builder.Services.AddScoped<EmailNotificationService>();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
@@ -73,8 +77,6 @@ if(app.Environment.IsDevelopment())
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 
-app.UseMiddleware<RequestLoggingMiddleware>();
-
 app.UseAuthorization();
 
 app.MapControllers();
@@ -90,13 +92,13 @@ using (var scope = app.Services.CreateScope())
 
         await context.Database.CanConnectAsync();
 
-        var logService = service.GetRequiredService<LogService>();
+        var logService = service.GetRequiredService<ILogService>();
         logService.LogInformation("Подключение к БД выполнено успешно");
     }
     catch (Exception ex)
     {
-        var logService = service.GetRequiredService<LogService>();
-        logService.LogError("Подключение к БД не выполнено", "Возникшая ошибка: ", $"{ex.Message}");
+        var logService = service.GetRequiredService<ILogService>();
+        logService.LogError($"Подключение к БД не выполнено. Возникшая ошибка: {ex.Message}");
     }
 }
 
