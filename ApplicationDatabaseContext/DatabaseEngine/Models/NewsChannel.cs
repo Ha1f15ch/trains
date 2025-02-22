@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace DatabaseEngine.Models
 {
@@ -23,7 +19,9 @@ namespace DatabaseEngine.Models
         public int CountSubscribers { get; set; }
         public DateTime DateCreated { get; set; }
 
-        public List<NewsChannelsPosts> ListNewsChannelsPosts { get; set; }
-        public List<NewsChannelsSubscribers> ListNewsChannelsSubscribers { get; set; }
+		[JsonIgnore]
+		public List<NewsChannelsPosts> ListNewsChannelsPosts { get; set; }
+		[JsonIgnore]
+		public List<NewsChannelsSubscribers> ListNewsChannelsSubscribers { get; set; }
     }
 }

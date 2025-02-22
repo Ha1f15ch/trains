@@ -1,8 +1,6 @@
 ﻿using BusinesEngine.Services.ServiceInterfaces;
-using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using WebApiApp.LogInfrastructure;
 
 namespace WebApiApp.Controllers
 {

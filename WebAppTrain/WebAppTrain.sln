@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinesEngine", "..\Domain\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTOs", "..\Shared\DTOs\DTOs.csproj", "{A99A8C8C-8B0A-4974-BAF6-F59F8291EB87}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiClients", "..\ApiClients\ApiClients.csproj", "{EC748AA8-EFD2-4AE3-B1C8-D84A27E6072A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonInterfaces", "..\CommonInterfaces\CommonInterfaces.csproj", "{820CD8B0-20A1-45A9-BA1B-6CF5DC9037E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,8 +37,19 @@ Global
 		{A99A8C8C-8B0A-4974-BAF6-F59F8291EB87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A99A8C8C-8B0A-4974-BAF6-F59F8291EB87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A99A8C8C-8B0A-4974-BAF6-F59F8291EB87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC748AA8-EFD2-4AE3-B1C8-D84A27E6072A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC748AA8-EFD2-4AE3-B1C8-D84A27E6072A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC748AA8-EFD2-4AE3-B1C8-D84A27E6072A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC748AA8-EFD2-4AE3-B1C8-D84A27E6072A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{820CD8B0-20A1-45A9-BA1B-6CF5DC9037E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{820CD8B0-20A1-45A9-BA1B-6CF5DC9037E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{820CD8B0-20A1-45A9-BA1B-6CF5DC9037E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{820CD8B0-20A1-45A9-BA1B-6CF5DC9037E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B175ADA6-61DD-42B7-8EB0-6FF21198402D}
 	EndGlobalSection
 EndGlobal

@@ -1,17 +1,15 @@
 ﻿using BusinesEngine.Events;
-using BusinesEngine.Events.Interfaces;
 using BusinesEngine.Services;
 using BusinesEngine.Services.ServiceInterfaces;
 using DatabaseEngine.RepositoryStorage.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Channels;
-using WebApiApp.LogInfrastructure;
-using WebAppTrain.LogInfrastructure;
 
 namespace WebAppTrain.Controllers
 {
-	[ApiController]
 	[Route("main/v1/")]
+	[ApiController]
+	[AllowAnonymous] //Временное решение, так как для реального рабочего Api необходимо настраивать авторизацию в заголовках 
 	public class ObserverController : Controller
 	{
 		private readonly NewsPublisher _newsPublisher;

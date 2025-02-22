@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace DatabaseEngine.Models
 {
@@ -22,7 +18,9 @@ namespace DatabaseEngine.Models
         public required int UserId { get; set; }
         public DateTime CreatedDate { get; set; }
 
-        public User User { get; set; }
-        public NewsChannel NewsChannel { get; set; }
+		[JsonIgnore]
+		public User User { get; set; }
+		[JsonIgnore]
+		public NewsChannel NewsChannel { get; set; }
     }
 }

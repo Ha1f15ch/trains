@@ -10,6 +10,8 @@ using WebApiApp.LogInfrastructure;
 using WebAppTrain.LogInfrastructure;
 using BusinesEngine.Events;
 using BusinesEngine.Services.ServiceInterfaces;
+using ApiClients;
+using CommonInterfaces.ApiClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +32,18 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     });
+
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowAll",
+		builder =>
+		{
+			builder.AllowAnyOrigin()
+				   .AllowAnyMethod()
+				   .AllowAnyHeader();
+		});
+});
+
 //swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(
@@ -42,6 +56,11 @@ builder.Services.AddSwaggerGen(
             Description = "API для практики и применения подходов и технологий из roadmap-a"
         });
     });
+builder.Services.AddHttpClient<ApiClient>(client =>
+{
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+});
+builder.Services.AddScoped<IApiClient, ApiClient>();
 builder.Services.AddSingleton<ILogService, LogService>();
 builder.Services.AddScoped<LogSubscriber>();
 builder.Services.AddScoped<NewsPublisher>();
@@ -53,8 +72,7 @@ builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<INewsChannelRepository, NewsChannelRepository>();
 builder.Services.AddTransient<INewsChannelsPostsRepository, NewsChannelsPostsRepository>();
 builder.Services.AddTransient<INewsChannelsSubscribersRepository, NewsChannelsSubscribersRepository>();
-builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-   .AddNegotiate();
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -75,6 +93,8 @@ if(app.Environment.IsDevelopment())
 }
 
 // Configure the HTTP request pipeline.
+app.UseCors("AllowAll");
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
