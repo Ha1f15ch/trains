@@ -21,6 +21,7 @@ namespace WebAppTrain.Controllers
 		private readonly INewsChannelsSubscribersRepository _newsChannelsSubscribersRepository;
 
 		private readonly EmailNotificationService _emailNotificationService;
+		private readonly JsonStringHandlerService _jsonStringHandlerService;
 
 		private readonly ILogService _logService;
 
@@ -32,6 +33,7 @@ namespace WebAppTrain.Controllers
 			INewsChannelsPostsRepository newsChannelsPostsRepository, 
 			INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, 
 			EmailNotificationService emailNotificationService, 
+			JsonStringHandlerService jsonStringHandlerService,
 			ILogService logService)
 		{
 			_newsPublisher = newsPublisher;
@@ -44,6 +46,7 @@ namespace WebAppTrain.Controllers
 			
 			_logService = logService;
 			_emailNotificationService = emailNotificationService;
+			_jsonStringHandlerService = jsonStringHandlerService;
 		}
 
 		[HttpGet("channel/all")]
@@ -51,7 +54,15 @@ namespace WebAppTrain.Controllers
 		{
 			var result = await _newsChannelRepository.GetAllNewsChannels();
 
-			return Ok(result);
+			/*if(result == null || result?.Count == 0)
+			{
+				return Ok(result);
+			}*/
+
+			// Пытаемся конвертировать данные в нормальный вид 
+			var serializedResult = await _jsonStringHandlerService.SerializeList(result);
+
+			return Ok(serializedResult);
 		}
 
 		[HttpGet("channel/{channelId}")]

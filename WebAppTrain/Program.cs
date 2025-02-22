@@ -65,6 +65,7 @@ builder.Services.AddSingleton<ILogService, LogService>();
 builder.Services.AddScoped<LogSubscriber>();
 builder.Services.AddScoped<NewsPublisher>();
 builder.Services.AddScoped<EmailNotificationService>();
+builder.Services.AddScoped<JsonStringHandlerService>();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<ISubscriptionRepository, SubscriptionRepository>();
