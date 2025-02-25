@@ -54,11 +54,6 @@ namespace WebAppTrain.Controllers
 		{
 			var result = await _newsChannelRepository.GetAllNewsChannels();
 
-			/*if(result == null || result?.Count == 0)
-			{
-				return Ok(result);
-			}*/
-
 			// Пытаемся конвертировать данные в нормальный вид 
 			var serializedResult = await _jsonStringHandlerService.SerializeList(result);
 

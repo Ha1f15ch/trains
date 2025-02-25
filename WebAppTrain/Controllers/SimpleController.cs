@@ -1,4 +1,5 @@
-﻿using BusinesEngine.Services.ServiceInterfaces;
+﻿using BusinesEngine.Services;
+using BusinesEngine.Services.ServiceInterfaces;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using DtoForApi;
 using Microsoft.AspNetCore.Authorization;
@@ -16,17 +17,20 @@ namespace WebApiApp.Controllers
 		private readonly IUserRepository _userRepository;
         private readonly ISubscriptionRepository _subscriptionRepository;
         private readonly IBookRepository _bookRepository;
+		private readonly JsonStringHandlerService _jsonStringHandlerService;
 
-        public SimpleController(
+		public SimpleController(
             ILogService logService,
 			IUserRepository userRepository,
             ISubscriptionRepository subscriptionRepository,
-            IBookRepository bookRepository)
+            IBookRepository bookRepository,
+			JsonStringHandlerService jsonStringHandlerService)
         {
             _logService = logService;
             _userRepository = userRepository;
             _subscriptionRepository = subscriptionRepository;
             _bookRepository = bookRepository;
+            _jsonStringHandlerService = jsonStringHandlerService;
         }
 
         [AllowAnonymous]
@@ -45,7 +49,9 @@ namespace WebApiApp.Controllers
             {
                 var result = await _userRepository.CreateNewUser(userData.Name, userData.Email, userData.Password, true, DateTime.UtcNow, DateTime.UtcNow, DateTime.MinValue);
 
-                return Ok(result);
+                var serializedResult = await _jsonStringHandlerService.SerializeSingle(result);
+
+				return Ok(serializedResult);
             }
             else
             {

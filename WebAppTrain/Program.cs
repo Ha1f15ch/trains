@@ -60,6 +60,7 @@ builder.Services.AddSwaggerGen(
 builder.Services.AddHttpClient<ApiClient>(client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+    client.Timeout = TimeSpan.FromMinutes(5);
 });
 builder.Services.AddScoped<IApiClient, ApiClient>();
 builder.Services.AddSingleton<ILogService, LogService>();
