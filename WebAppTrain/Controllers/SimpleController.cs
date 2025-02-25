@@ -1,6 +1,10 @@
 ﻿using BusinesEngine.Services.ServiceInterfaces;
 using DatabaseEngine.RepositoryStorage.Interfaces;
+using DtoForApi;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace WebApiApp.Controllers
 {
@@ -25,17 +29,21 @@ namespace WebApiApp.Controllers
             _bookRepository = bookRepository;
         }
 
+        [AllowAnonymous]
         [HttpPost("add-user")]
-        public async Task<IActionResult> CreateNewUser(string name
-                                                      , string email
-                                                      , string password
-                                                      )
+        public async Task<IActionResult> CreateNewUser([FromBody] UserDto userData)
         {
-            Console.WriteLine($"name = {name}, \nemail = {email}, \npassword = {password}");
-
-            if(!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(password))
+			if(userData is null)
             {
-                var result = await _userRepository.CreateNewUser(name, email, password, true, DateTime.UtcNow, DateTime.UtcNow, DateTime.MinValue);
+                _logService.LogInformation($"{nameof(CreateNewUser)} - в параметре userData был передан - {userData}");
+                BadRequest("Объект User не может быть равен null");
+            }
+
+            Console.WriteLine($"name = {userData.Name}, \nemail = {userData.Email}, \npassword = {userData.Password}");
+
+            if(!string.IsNullOrEmpty(userData.Name) && !string.IsNullOrEmpty(userData.Email) && !string.IsNullOrEmpty(userData.Password))
+            {
+                var result = await _userRepository.CreateNewUser(userData.Name, userData.Email, userData.Password, true, DateTime.UtcNow, DateTime.UtcNow, DateTime.MinValue);
 
                 return Ok(result);
             }

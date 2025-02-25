@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
     <ProjectReference Include="..\CommonInterfaces\CommonInterfaces.csproj" />
   </ItemGroup>
 
