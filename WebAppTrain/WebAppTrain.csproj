@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
       <PrivateAssets>all</PrivateAssets>
@@ -29,6 +30,7 @@
     <ProjectReference Include="..\ApiClients\ApiClients.csproj" />
     <ProjectReference Include="..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
     <ProjectReference Include="..\Domain\BusinesEngine\BusinesEngine.csproj" />
+    <ProjectReference Include="..\Domain\MapperService\MapperService.csproj" />
     <ProjectReference Include="..\Shared\DtoForApi\DtoForApi.csproj" />
     <ProjectReference Include="..\Shared\DTOs\DTOs.csproj" />
   </ItemGroup>

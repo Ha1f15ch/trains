@@ -12,6 +12,7 @@ using BusinesEngine.Events;
 using BusinesEngine.Services.ServiceInterfaces;
 using ApiClients;
 using CommonInterfaces.ApiClients;
+using MapperService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,11 +58,14 @@ builder.Services.AddSwaggerGen(
             Description = "API для практики и применения подходов и технологий из roadmap-a"
         });
     });
+// Настройка Api клиента
 builder.Services.AddHttpClient<ApiClient>(client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
     client.Timeout = TimeSpan.FromMinutes(5);
 });
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<IApiClient, ApiClient>();
 builder.Services.AddSingleton<ILogService, LogService>();
 builder.Services.AddScoped<LogSubscriber>();

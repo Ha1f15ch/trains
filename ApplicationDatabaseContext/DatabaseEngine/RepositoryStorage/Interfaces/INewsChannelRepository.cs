@@ -1,4 +1,5 @@
 ﻿using DatabaseEngine.Models;
+using DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace DatabaseEngine.RepositoryStorage.Interfaces
 {
     public interface INewsChannelRepository
     {
-        public Task<NewsChannel?> CreateNewNewsChannel(string name, string? description);
+        public Task<NewsChannel?> CreateNewNewsChannel(NewsChannelDto newsChannelDto);
         public Task<NewsChannel?> GetNewsChannelById(int newsChannelId);
         public Task<NewsChannel?> GetNewsChannelByName(string newsChannelName);
         public Task<List<NewsChannel>?> GetAllNewsChannels();

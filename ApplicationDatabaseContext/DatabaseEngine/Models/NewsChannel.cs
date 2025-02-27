@@ -16,12 +16,17 @@ namespace DatabaseEngine.Models
         [Key] public int Id { get; set; }
         public required string Name { get; set; }
         public string? Description { get; set; }
-        public int CountSubscribers { get; set; }
+        public int CountSubscribers { get; private set; } = 0;
         public DateTime DateCreated { get; set; }
 
 		[JsonIgnore]
 		public List<NewsChannelsPosts> ListNewsChannelsPosts { get; set; }
 		[JsonIgnore]
 		public List<NewsChannelsSubscribers> ListNewsChannelsSubscribers { get; set; }
+
+        public void AddSubscriber()
+        {
+            CountSubscribers++;
+        }
     }
 }

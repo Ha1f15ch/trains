@@ -8,16 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
-    <ProjectReference Include="..\CommonInterfaces\CommonInterfaces.csproj" />
+    <ProjectReference Include="..\..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
+    <ProjectReference Include="..\..\Shared\DTOs\DTOs.csproj" />
   </ItemGroup>
 
 </Project>

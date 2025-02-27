@@ -2,6 +2,7 @@
 using BusinesEngine.Services;
 using BusinesEngine.Services.ServiceInterfaces;
 using DatabaseEngine.RepositoryStorage.Interfaces;
+using DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -90,11 +91,11 @@ namespace WebAppTrain.Controllers
 		}
 
 		[HttpPost("channel/create-new")]
-		public async Task<IActionResult> CreateNewNewsChannel(string name, string? description)
+		public async Task<IActionResult> CreateNewNewsChannel([FromBody] NewsChannelDto newsChannelDto)
 		{
 			_logService.LogInformation($"Создаем новостной канал");
 
-			var newNewsChannel = await _newsChannelRepository.CreateNewNewsChannel(name, description);
+			var newNewsChannel = await _newsChannelRepository.CreateNewNewsChannel(newsChannelDto);
 
 			if(newNewsChannel is null)
 			{

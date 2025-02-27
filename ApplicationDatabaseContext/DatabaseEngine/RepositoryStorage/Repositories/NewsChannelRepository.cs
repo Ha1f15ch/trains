@@ -1,6 +1,8 @@
-﻿using BusinesEngine.Services.ServiceInterfaces;
+﻿using AutoMapper;
+using BusinesEngine.Services.ServiceInterfaces;
 using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
+using DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,42 +12,38 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     {
         private readonly AppDbContext _appDbContext;
         private readonly ILogService _logService;
+        private readonly IMapper _mapper;
 
-        public NewsChannelRepository(AppDbContext appDbContext, ILogService logService)
+        public NewsChannelRepository(AppDbContext appDbContext, ILogService logService, IMapper mapper)
         {
             _appDbContext = appDbContext;
             _logService = logService;
+            _mapper = mapper;
         }
 
-        public async Task<NewsChannel?> CreateNewNewsChannel(string name, string? description)
+        public async Task<NewsChannel?> CreateNewNewsChannel(NewsChannelDto newsChannelDto)
         {
             try
             {
-				_logService.LogInformation($"{nameof(CreateNewNewsChannel)} - Создание записи NewsChannel, используя метод {name}. Параметры: name = {name}, Description = {description}");
+				_logService.LogInformation($"{nameof(CreateNewNewsChannel)} - Создание записи NewsChannel, используя метод {nameof(CreateNewNewsChannel)}. Параметры: name = {newsChannelDto.Name}, Description = {newsChannelDto.Description}");
 
-                if(string.IsNullOrEmpty(name))
+                if(string.IsNullOrEmpty(newsChannelDto.Name))
                 {
-					_logService.LogWarning($"Название новостного канала не может быть пустым. {nameof(name)}");
+					_logService.LogWarning($"Название новостного канала не может быть пустым. {nameof(newsChannelDto.Name)}");
                     return null;
                 }
 
                 //Есть ли уже данная запись в БД
-                var existedNewsChannel = await GetNewsChannelByName(name);
+                var existedNewsChannel = await GetNewsChannelByName(newsChannelDto.Name);
 
                 if(existedNewsChannel is not null)
                 {
-					_logService.LogInformation($"Новостной канал с названием '{name}' уже существует. Возвращен существующий новостной канал. Id = {existedNewsChannel.Id}");
+					_logService.LogInformation($"Новостной канал с названием '{newsChannelDto.Name}' уже существует. Возвращен существующий новостной канал. Id = {existedNewsChannel.Id}");
                     return existedNewsChannel;
                 }
 
                 //Тогда создаем новый канал 
-                var newNewsChannel = new NewsChannel
-                {
-                    Name = name,
-                    Description = description,
-                    CountSubscribers = 0,
-                    DateCreated = DateTime.UtcNow
-                };
+                var newNewsChannel = _mapper.Map<NewsChannel>(newsChannelDto);
 
                 await _appDbContext.AddAsync(newNewsChannel);
                 await _appDbContext.SaveChangesAsync();

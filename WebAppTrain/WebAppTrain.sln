@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonInterfaces", "..\Comm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DtoForApi", "..\Shared\DtoForApi\DtoForApi.csproj", "{DA1732A0-E01D-4BF2-8F99-DE5044D37700}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapperService", "..\Domain\MapperService\MapperService.csproj", "{A5C3287F-765F-4C53-BABA-F8ECA90397D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{DA1732A0-E01D-4BF2-8F99-DE5044D37700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA1732A0-E01D-4BF2-8F99-DE5044D37700}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA1732A0-E01D-4BF2-8F99-DE5044D37700}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5C3287F-765F-4C53-BABA-F8ECA90397D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5C3287F-765F-4C53-BABA-F8ECA90397D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5C3287F-765F-4C53-BABA-F8ECA90397D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5C3287F-765F-4C53-BABA-F8ECA90397D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
