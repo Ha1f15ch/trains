@@ -97,7 +97,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddHangfire(options =>
 {
     //Необходимо создавать БД из connectionString до того, как начнется обращение по этим данным к БД
-    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("HangfireConnection"), new PostgreSqlStorageOptions
+    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new PostgreSqlStorageOptions
     {
         PrepareSchemaIfNecessary = true
     });
