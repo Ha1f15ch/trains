@@ -13,10 +13,16 @@ using BusinesEngine.Services.ServiceInterfaces;
 using ApiClients;
 using CommonInterfaces.ApiClients;
 using MapperService;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Строка подключения к БД
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Строка подключения к БД для hangfire
+var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection");
 
 var logConfigurator = new LogServiceConfigurator(builder.Configuration);
 logConfigurator.Configure();
@@ -87,6 +93,18 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 
+// настройка hangfire 
+builder.Services.AddHangfire(options =>
+{
+    //Необходимо создавать БД из connectionString до того, как начнется обращение по этим данным к БД
+    options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("HangfireConnection"), new PostgreSqlStorageOptions
+    {
+        PrepareSchemaIfNecessary = true
+    });
+});
+	
+builder.Services.AddHangfireServer();
+
 var app = builder.Build();
 
 if(app.Environment.IsDevelopment())
@@ -101,13 +119,12 @@ if(app.Environment.IsDevelopment())
 
 // Configure the HTTP request pipeline.
 app.UseCors("AllowSpecificOrigin");
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
+app.UseHangfireDashboard(); // Включить поддержку hangfire дашбордов
 
+// Проверка доступа БД перед запуском приложения
 using (var scope = app.Services.CreateScope())
 {
     var service = scope.ServiceProvider;
@@ -115,8 +132,9 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = service.GetRequiredService<AppDbContext>();
-        await context.Database.EnsureCreatedAsync();
 
+        // проверка на то, создана ли БД и попытка подключиться к ней
+        await context.Database.EnsureCreatedAsync();
         await context.Database.CanConnectAsync();
 
         var logService = service.GetRequiredService<ILogService>();

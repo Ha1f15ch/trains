@@ -1,6 +1,6 @@
-@WebAppTrain_HostAddress = http://localhost:5009
+@WebAppTrain_HostAddress = https://localhost:7125
 
-GET {{WebAppTrain_HostAddress}}/weatherforecast/
+GET {{WebAppTrain_HostAddress}}/swagger/index.html
 Accept: application/json
 
 ###
