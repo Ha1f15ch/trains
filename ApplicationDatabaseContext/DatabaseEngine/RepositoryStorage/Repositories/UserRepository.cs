@@ -107,5 +107,12 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 throw;
             }
         }
-    }
+
+		public async Task<List<string>> GetAllUsersEmail()
+        {
+			_logService.LogInformation($"Выполнение ХП для получения всех почтновых адресов, вызван метод {nameof(GetAllUsersEmail)}");
+
+            return await _appDbContext.Users.Select(s => s.Email).ToListAsync();
+		}
+	}
 }
