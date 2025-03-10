@@ -15,7 +15,8 @@ using CommonInterfaces.ApiClients;
 using MapperService;
 using Hangfire;
 using Hangfire.PostgreSql;
-using Microsoft.Extensions.Configuration;
+using HangfireTestProj;
+using HangfireTestProj.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +86,9 @@ builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<INewsChannelRepository, NewsChannelRepository>();
 builder.Services.AddTransient<INewsChannelsPostsRepository, NewsChannelsPostsRepository>();
 builder.Services.AddTransient<INewsChannelsSubscribersRepository, NewsChannelsSubscribersRepository>();
+// Класс c di для джоба
+builder.Services.AddScoped<EmailSenderWeekDelayJob>();
+//игнорировать дефолт авторизацию в контроллере (api клиенте)
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
 builder.Services.AddAuthorization(options =>
@@ -123,6 +127,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.UseHangfireDashboard(); // Включить поддержку hangfire дашбордов
+
+// Запускаем джобы
+JobExecution.StartJobs();
 
 // Проверка доступа БД перед запуском приложения
 using (var scope = app.Services.CreateScope())

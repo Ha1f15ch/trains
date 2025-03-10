@@ -147,7 +147,7 @@ namespace WebAppTrain.Controllers
 				await _newsPublisher.NotifySubscribers($"Пользователь {userId} подписался на канал - {channelId}");
 
 				//Отправить письмо пользователю на почту о том, что он подписался
-				await _emailNotificationService.SendEmailAsync(user.Email, "Добро пожаловать !!!", $"Рады видеть на Вашем канале. Надеемся Вы найдете у Нас много интересной и полезной информации. Дальнейшая отправка новостей и оповещений будет выполняться на данную почту - {user.Email}");
+				await _emailNotificationService.SendEmailAsync(user.Email, "Добро пожаловать !!!", $"Рады видеть Вас на Нашем канале. Надеемся Вы найдете у Нас много интересной и полезной информации. Дальнейшая отправка новостей и оповещений будет выполняться на данную почту - {user.Email}");
 			}
 
 			return Ok(resultSubscription);
