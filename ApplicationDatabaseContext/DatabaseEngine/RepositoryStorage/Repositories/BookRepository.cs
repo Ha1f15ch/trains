@@ -28,13 +28,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 if (string.IsNullOrEmpty(title))
                 {
 					_logService.LogWarning($"Название книги не может быть пустым. {nameof(title)}");
-                    return null;
+                    throw new ArgumentNullException($"Параметр title не может быть null");
                 }
 
                 if (updateDate == default)
                 {
 					_logService.LogWarning("Дата обновления не указана.");
-                    return null;
+                    throw new ArgumentNullException($"Параметр updateDate должен быть указан");
                 }
 
                 //проверить, есть ли уже такие записи по title
@@ -46,6 +46,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                     return existedBook;
                 }
 
+                //Создаем экземпляр класса книги для сохранения в контексте
                 var newBook = new Book
                 {
                     Title = title,
@@ -77,7 +78,11 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             {
 				_logService.LogInformation($"Поиск всех книг, вызван метод {nameof(GetAllBooks)}");
 
-                return await _context.Books.ToListAsync();
+                var books = await _context.Books.ToListAsync();
+
+				_logService.LogInformation($"Найдено {books.Count} книг");
+
+				return books;
             }
             catch (Exception ex)
             {
@@ -90,19 +95,21 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
+                //Валидация входного параметра
                 if(id <= 0)
                 {
 					_logService.LogWarning($"Некорректное значение id: {id}. Ожидается положительное число.");
-                    return null;
+                    throw new ArgumentException($"Для поиска книги id должен быть > 0");
                 }
 
 				_logService.LogInformation($"Поиск книги по id = {id}, вызван метод {nameof(GetBookById)}");
 
+                //Выполняем поиск
                 var book = await _context.Books.FindAsync(id);
 
                 if(book is null)
                 {
-					_logService.LogWarning($"Книга с id = {id} не найдена.");
+					_logService.LogWarning($"Книга с id = {id} не найдена.\n id = {book.Id}\n title = {book.Title}");
                 }
 
                 return book;
@@ -121,7 +128,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 if (string.IsNullOrEmpty(name))
                 {
 					_logService.LogWarning($"Некорректное значение name книги: {name}. Ожидается не null.");
-                    return null;
+                    throw new NullReferenceException($"Параметр name не может быть равен null");
                 }
 
 				_logService.LogInformation($"Поиск книги по названию = {name}, вызван метод {nameof(GetBookByName)}");
