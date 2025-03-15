@@ -43,6 +43,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 					throw new NullReferenceException($"Новостной канал по newsChannelId не был найден - {newsChannel} - {nameof(newsChannel)}");
 				}
 
+                //Создаем экземпляр класса для сохранения в контексте 
                 var subscriberValue = new NewsChannelsSubscribers
                 {
                     NewsChannelId = newsChannelId,
@@ -71,10 +72,17 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 		{
 			try
 			{
-				return await _appDbContext.NewsChannelsSubscribers
+                _logService.LogInformation($"Поиск подписавшихся пользователей по {nameof(newsChannelId)} = {newsChannelId}");
+
+				//Поиск по свойствам связанных таблиц. Поиск пользователей через newsChannelId. Подписчики
+				var users = await _appDbContext.NewsChannelsSubscribers
 					.Where(ncs => ncs.NewsChannelId == newsChannelId)
 					.Include(ncs => ncs.User) // Загрузка связи User для получения email
 					.Select(ncs => ncs.User).ToListAsync();
+
+                _logService.LogInformation($"Найдено {users.Count} записей");
+
+                return users;
 			}
 			catch (Exception ex)
 			{
