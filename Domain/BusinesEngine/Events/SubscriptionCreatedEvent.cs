@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace BusinesEngine.Events
 {
+    //Специальный тип данных для обработчика события mediatr
     public class SubscriptionCreatedEvent : INotification
     {
         public SubscriptionDto Subscription { get; }

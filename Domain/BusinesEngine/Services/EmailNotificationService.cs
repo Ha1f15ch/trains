@@ -18,19 +18,21 @@ namespace BusinesEngine.Services
 			_logger = logger;
 		}
 
+		//Отправка на почту, настройка smtp сервера по отправке уведомлений
 		public async Task SendEmailAsync(string recipientEmail, string subject, string body)
 		{
 			try
 			{
-				using (var smtpClient = new SmtpClient("smtp.yandex.ru", 587))
+				using (var smtpClient = new SmtpClient("smtp.yandex.ru", 587)) //Каким сервером и с какого порта будет выполняться отправка и работа сервиса
 				{
 					smtpClient.Credentials = new NetworkCredential("H41f1sch@yandex.ru", "sulofqstnandgroc");//MyTestSiteForNotification - в яндексе, название пароля (sulofqstnandgroc)
-					smtpClient.EnableSsl = true;
+					smtpClient.EnableSsl = true; // Без этого параметра не работает
 
+					//Формирование сообщения
 					var mailMessage = new MailMessage
 					{
-						From = new MailAddress("H41f1sch@yandex.ru"),
-						Subject = "Новое уведомление от новостного канала",
+						From = new MailAddress("H41f1sch@yandex.ru"),// от кого
+						Subject = "Новое уведомление от новостного канала", //тема письма
 						Body = body,
 						IsBodyHtml = true
 					};

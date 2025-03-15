@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 
 namespace BusinesEngine.Events
 {
+	//В дальнейшем используется как альтернатива _logService, то есть публикует какие-то действия в общих логах по достижению какого-то события
 	public class NewsPublisher : INewsPublisher
 	{
 		private readonly List<INewsSubscriber> _subscribers = new();
 		private readonly List<IEmailSubscriber> _emailSubscribers = new();
 
+		//Выполнение уведомления всех подписчиков
 		public async Task NotifySubscribers(string message)
 		{
 			await Task.Run(async () => 
@@ -29,6 +31,7 @@ namespace BusinesEngine.Events
 			});
 		}
 
+		//Подписаться на событие, добавить новый элемент отслеживания
 		public async Task Subscribe(INewsSubscriber subscriber)
 		{
 			await Task.Run(() =>
@@ -44,6 +47,7 @@ namespace BusinesEngine.Events
 			});
 		}
 
+		//Отписаться от события
 		public async Task Unsubscribe(INewsSubscriber subscriber)
 		{
 			await Task.Run(() =>

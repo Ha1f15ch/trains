@@ -18,6 +18,7 @@ namespace BusinesEngine.Events
 			_logger = Log.Logger;
 		}
 
+		//Вывод в логи последнего события (того, что передали в лог)
 		public async Task Update(string message)
 		{
 			await Task.Run(() =>
