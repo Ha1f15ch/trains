@@ -1,15 +1,9 @@
 ﻿using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Npgsql;
 using Dapper;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinesEngine.Services.ServiceInterfaces;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
@@ -43,13 +37,20 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
             try
             {
+                _logService.LogInformation($"Принимаем параметры для выполнения ХП: \nname = {name}\nemail = {email}\npassword = {password}\nisActive = {isActive}\ndateCreate = {dateCreate}\ndateUpdate = {dateUpdate}\ndateDelete = {dateDelete}");
                 _logService.LogInformation($"{nameof(CreateNewUser)} - Выполнение ХП для создания записи User");
 
                 await _appDbContext.Database.ExecuteSqlRawAsync("CALL insertuserdata(@value_Name, @value_Email, @value_Password, @value_IsActive, @value_DCreate, @value_DUpdate, @value_DDelete)", parameters);
 
+                _logService.LogInformation($"Выполнение ХП прошло без ошибок. Поиск созданной записи пользователя");
+
                 var newUser = await _appDbContext.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
 
-                if (newUser == null) throw new NullReferenceException("Не найдено значение в таблице User !!!");
+                if (newUser == null)
+                {
+                    _logService.LogWarning($"Найти пользователя по email = {email} не удалось");
+                    throw new NullReferenceException("Не найдено значение в таблице User !!!"); 
+                }
 
                 return newUser;
             }
@@ -69,11 +70,17 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 const string sqlQuery = "SELECT * FROM dbo.\"User\"";
 
+                //Создаем соединение с БД
                 using var connection = _appDbContext.Database.GetDbConnection();
 
+                //Открываем соединение
                 await connection.OpenAsync();
 
+                _logService.LogInformation($"Поиск пользователей. Запрос - {sqlQuery}");
+
                 var users = await connection.QueryAsync<User?>(sqlQuery);
+
+                _logService.LogInformation($"Найдено записей - {users.ToList().Count}");
                 
                 return users.ToList();
             }
@@ -93,11 +100,21 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 const string sqlQuery = "SELECT * FROM dbo.\"User\" WHERE \"Id\" = @Id";
 
-                using var connection = _appDbContext.Database.GetDbConnection();
+				//Создаем соединение с БД
+				using var connection = _appDbContext.Database.GetDbConnection();
 
-                await connection.OpenAsync();
+				//Открываем соединение
+				await connection.OpenAsync();
 
-                var userById = await connection.QuerySingleOrDefaultAsync<User?>(sqlQuery, new { Id = userId });
+				_logService.LogInformation($"Поиск пользователя по id. Запрос - {sqlQuery}");
+
+				var userById = await connection.QuerySingleOrDefaultAsync<User?>(sqlQuery, new { Id = userId });
+
+                if (userById == null)
+                {
+                    _logService.LogWarning($"Найти запись пользователя по id = {userId} не удалось");
+                    return null;
+                }
 
                 return userById;
             }
@@ -110,9 +127,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
 		public async Task<List<string>> GetAllUsersEmail()
         {
-			_logService.LogInformation($"Выполнение ХП для получения всех почтновых адресов, вызван метод {nameof(GetAllUsersEmail)}");
+			_logService.LogInformation($"Выполнение ХП для получения всех почтовых адресов, вызван метод {nameof(GetAllUsersEmail)}");
 
-            return await _appDbContext.Users.Select(s => s.Email).ToListAsync();
+            var usersEmail = await _appDbContext.Users.Select(s => s.Email).ToListAsync();
+
+            _logService.LogInformation($"Найдено {usersEmail.Count} записей.");
+
+            return usersEmail;
 		}
 	}
 }
