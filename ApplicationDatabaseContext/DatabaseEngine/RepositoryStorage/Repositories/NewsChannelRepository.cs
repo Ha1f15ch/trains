@@ -30,12 +30,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 if(string.IsNullOrEmpty(newsChannelDto.Name))
                 {
 					_logService.LogWarning($"Название новостного канала не может быть пустым. {nameof(newsChannelDto.Name)}");
-                    return null;
+                    throw new ArgumentNullException("Значение Name не может быть null");
                 }
 
                 //Есть ли уже данная запись в БД
                 var existedNewsChannel = await GetNewsChannelByName(newsChannelDto.Name);
 
+                //Выводим ее 
                 if(existedNewsChannel is not null)
                 {
 					_logService.LogInformation($"Новостной канал с названием '{newsChannelDto.Name}' уже существует. Возвращен существующий новостной канал. Id = {existedNewsChannel.Id}");
@@ -64,9 +65,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             try
             {
                 _logService.LogInformation($"Поиск всех новостных каналов, вызван метод {nameof(GetAllNewsChannels)}");
+                
+                var channels = await _appDbContext.NewsChannels.ToListAsync();
 
-                return await _appDbContext.NewsChannels.ToListAsync();
-            }
+                _logService.LogInformation($"найдено каналов - {channels.Count}");
+
+				return channels;
+			}
             catch (Exception ex)
             {
                 _logService.LogError($"При выполнении метода {nameof(GetAllNewsChannels)} возникла ошибка: {ex.Message}");
@@ -78,19 +83,20 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
+                //проверяем входной параметр
                 if (newsChannelId <= 0)
                 {
                     _logService.LogWarning($"Некорректное значение id: {newsChannelId}. Ожидается положительное число.");
-                    return null;
+                    throw new ArgumentNullException("Параметр newsChannelId должен быть > 0");
                 }
 
-                _logService.LogInformation($"Новостного канала по id = {newsChannelId}, вызван метод {nameof(newsChannelId)}");
+                _logService.LogInformation($"Поиск новостного канала по id = {newsChannelId}, вызван метод {nameof(newsChannelId)}");
 
                 var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
 
                 if (newsChannel is null)
                 {
-                    _logService.LogWarning($"Новостной канал с id = {newsChannelId} не найдена.");
+                    _logService.LogWarning($"Новостной канал с id = {newsChannelId} не найден.");
                 }
 
                 return newsChannel;
@@ -109,13 +115,14 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 if (string.IsNullOrEmpty(newsChannelName))
                 {
                     _logService.LogWarning($"Некорректное значение newsChannelName для поиска новостного канала: {newsChannelName}. Ожидается не null.");
-                    return null;
+                    throw new ArgumentNullException("Значение newsChannelName не может быть null");
                 }
 
                 _logService.LogInformation($"Поиск новостного канала по названию = {newsChannelName}, вызван метод {nameof(GetNewsChannelByName)}");
 
                 var newsChannel = await _appDbContext.NewsChannels.SingleOrDefaultAsync(el => el.Name == newsChannelName);
 
+                //Если не нашли
                 if (newsChannel is null)
                 {
                     _logService.LogWarning($"Новостного канала с названием = {newsChannelName} не найдено.");
@@ -138,17 +145,21 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 if (string.IsNullOrEmpty(newsChannelName))
                 {
                     _logService.LogWarning($"Некорректное значение newsChannelName для поиска новостных каналов: {newsChannelName}. Ожидается не null.");
-                    return null;
-                }
+					throw new ArgumentNullException("Значение newsChannelName не может быть null");
+				}
 
                 _logService.LogInformation($"Поиск новостных каналов по названию = {newsChannelName}, вызван метод {nameof(GetNewsChannelsByPartName)}");
 
                 var newsChannel = await _appDbContext.NewsChannels.Where(el => el.Name.Contains(newsChannelName)).ToListAsync();
 
+                //Если ничего не найдено
                 if (newsChannel is null)
                 {
                     _logService.LogWarning($"Новостных каналов с названием = {newsChannelName} не найдено.");
+                    return null;
                 }
+
+                _logService.LogInformation($"По параметру - {newsChannelName} найдено - {newsChannel.Count} записей");
 
                 return newsChannel;
             }
