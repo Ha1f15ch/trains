@@ -1,3 +1,4 @@
+using RabbitMQ.Client;
 using BusinesEngine.Services;
 using DatabaseEngine;
 using DatabaseEngine.RepositoryStorage.Interfaces;
@@ -28,7 +29,21 @@ var hangfireConnectionString = builder.Configuration.GetConnectionString("Hangfi
 var logConfigurator = new LogServiceConfigurator(builder.Configuration);
 logConfigurator.Configure();
 
+// настройка Mediatr
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+// Конфигурация подключения к сервису RabbitMQ - развернут локально на ПК 
+builder.Services.AddSingleton<IConnection>(provider =>
+{
+	var factory = new ConnectionFactory
+	{
+		HostName = builder.Configuration["RabbitMQ:HostName"],
+		UserName = builder.Configuration["RabbitMQ:UserName"],
+		Password = builder.Configuration["RabbitMQ:Password"],
+		Port = int.Parse(builder.Configuration["RabbitMQ:Port"] ?? "5672")
+	};
+    return Task.Run(() => factory.CreateConnectionAsync()).GetAwaiter().GetResult();
+});
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -154,4 +169,31 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.Run();
+// проверяем подключение к RabbitMq
+using (var scope = app.Services.CreateScope())
+{
+    var service = scope.ServiceProvider;
+
+    try
+    {
+        var rabbitMqConnection = service.GetRequiredService<IConnection>();
+        if(rabbitMqConnection.IsOpen)
+        {
+            var logService = service.GetRequiredService<ILogService>();
+            logService.LogInformation("Подключение к RabbitMQ выполнено успешно");
+		}
+        else
+        {
+            throw new Exception("Ну удалось установить соединение с RabbitMQ");
+        }
+
+    }
+    catch(Exception ex)
+    {
+        var logService = service.GetRequiredService<ILogService>();
+		logService.LogError($"Подключение к RabbitMQ не выполнено. Возникшая ошибка: {ex.Message}");
+		throw;
+	}
+}
+
+    app.Run();
