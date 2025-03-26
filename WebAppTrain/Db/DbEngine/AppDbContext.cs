@@ -1,7 +1,10 @@
 ﻿namespace DbEngine
 {
-	public class AppDbContext
+	public class AppDbContext : DatabaseContext
 	{
-
+		public AppDbContext()
+		{
+			
+		}
 	}
 }
