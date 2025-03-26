@@ -11,9 +11,31 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BLogic", "BLogic", "{37A8E4
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integrations", "Integrations", "{C7A5F8E6-FA9E-418D-A620-35FCE527ABDD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEngine", "Site\SiteEngine\SiteEngine.csproj", "{16DC87A2-A6CE-473A-ADF7-66F68E16EBB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbEngine", "Db\DbEngine\DbEngine.csproj", "{05C363BC-BBFD-4033-93F3-9212AC174E40}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16DC87A2-A6CE-473A-ADF7-66F68E16EBB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16DC87A2-A6CE-473A-ADF7-66F68E16EBB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16DC87A2-A6CE-473A-ADF7-66F68E16EBB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16DC87A2-A6CE-473A-ADF7-66F68E16EBB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05C363BC-BBFD-4033-93F3-9212AC174E40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05C363BC-BBFD-4033-93F3-9212AC174E40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05C363BC-BBFD-4033-93F3-9212AC174E40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05C363BC-BBFD-4033-93F3-9212AC174E40}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{16DC87A2-A6CE-473A-ADF7-66F68E16EBB6} = {978F4FDE-07EF-4C92-AB15-92138F0080F6}
+		{05C363BC-BBFD-4033-93F3-9212AC174E40} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ED7B171D-A420-4E81-9DBE-F2FB56D90B98}
