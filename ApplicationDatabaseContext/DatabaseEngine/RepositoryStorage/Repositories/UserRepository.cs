@@ -4,21 +4,17 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Dapper;
 using System.Data;
-using BusinesEngine.Services.ServiceInterfaces;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ILogService _logService;
 
         public UserRepository(
-            AppDbContext appDbContext,
-			ILogService logService)
+            AppDbContext appDbContext)
         {
             _appDbContext = appDbContext;
-            _logService = logService;
         }
 
         // использовалась параметризированная хранимая процедура, написанная в pg admin 4
@@ -37,18 +33,12 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
             try
             {
-                _logService.LogInformation($"Принимаем параметры для выполнения ХП: \nname = {name}\nemail = {email}\npassword = {password}\nisActive = {isActive}\ndateCreate = {dateCreate}\ndateUpdate = {dateUpdate}\ndateDelete = {dateDelete}");
-                _logService.LogInformation($"{nameof(CreateNewUser)} - Выполнение ХП для создания записи User");
-
                 await _appDbContext.Database.ExecuteSqlRawAsync("CALL insertuserdata(@value_Name, @value_Email, @value_Password, @value_IsActive, @value_DCreate, @value_DUpdate, @value_DDelete)", parameters);
-
-                _logService.LogInformation($"Выполнение ХП прошло без ошибок. Поиск созданной записи пользователя");
 
                 var newUser = await _appDbContext.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
 
                 if (newUser == null)
                 {
-                    _logService.LogWarning($"Найти пользователя по email = {email} не удалось");
                     throw new NullReferenceException("Не найдено значение в таблице User !!!"); 
                 }
 
@@ -56,7 +46,6 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch(Exception ex)
             {
-                _logService.LogError($"{nameof(CreateNewUser)} - При выполнении метода - {CreateNewUser} возникла ошибка {ex.Message}");
                 throw;
             }
         }
@@ -66,8 +55,6 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
-                _logService.LogInformation($"{nameof(GetAllUsers)} - Выполнение ХП для получения всех пользователей, вызван метод");
-
                 const string sqlQuery = "SELECT * FROM dbo.\"User\"";
 
                 //Создаем соединение с БД
@@ -76,17 +63,12 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 //Открываем соединение
                 await connection.OpenAsync();
 
-                _logService.LogInformation($"Поиск пользователей. Запрос - {sqlQuery}");
-
                 var users = await connection.QueryAsync<User?>(sqlQuery);
-
-                _logService.LogInformation($"Найдено записей - {users.ToList().Count}");
                 
                 return users.ToList();
             }
             catch (Exception ex)
             {
-                _logService.LogError($"{nameof(GetAllUsers)} - При выполнении метода возникла ошибка: {ex.Message}");
                 throw;
             }
         }
@@ -96,8 +78,6 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
-                _logService.LogInformation($"Выполнение ХП для получения всех пользователей, вызван метод {nameof(GetUserById)}");
-
                 const string sqlQuery = "SELECT * FROM dbo.\"User\" WHERE \"Id\" = @Id";
 
 				//Создаем соединение с БД
@@ -106,13 +86,10 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 				//Открываем соединение
 				await connection.OpenAsync();
 
-				_logService.LogInformation($"Поиск пользователя по id. Запрос - {sqlQuery}");
-
 				var userById = await connection.QuerySingleOrDefaultAsync<User?>(sqlQuery, new { Id = userId });
 
                 if (userById == null)
                 {
-                    _logService.LogWarning($"Найти запись пользователя по id = {userId} не удалось");
                     return null;
                 }
 
@@ -120,18 +97,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch (Exception ex)
             {
-                _logService.LogError($"{nameof(GetUserById)} - При выполнении метода возникла ошибка: {ex.Message}");
                 throw;
             }
         }
 
 		public async Task<List<string>> GetAllUsersEmail()
         {
-			_logService.LogInformation($"Выполнение ХП для получения всех почтовых адресов, вызван метод {nameof(GetAllUsersEmail)}");
-
             var usersEmail = await _appDbContext.Users.Select(s => s.Email).ToListAsync();
-
-            _logService.LogInformation($"Найдено {usersEmail.Count} записей.");
 
             return usersEmail;
 		}

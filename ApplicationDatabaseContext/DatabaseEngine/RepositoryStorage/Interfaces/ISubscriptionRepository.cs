@@ -10,6 +10,6 @@ namespace DatabaseEngine.RepositoryStorage.Interfaces
     public interface ISubscriptionRepository
     {
         Task<Subscription> SubscribeUserToBook(int userId, int bookId);
-        Task<List<Subscription>> GetUserSubscriptions(int userId);
+        Task<List<Subscription?>> GetUserSubscriptions(int userId);
     }
 }

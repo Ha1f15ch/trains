@@ -31,13 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ApiClients\ApiClients.csproj" />
     <ProjectReference Include="..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
     <ProjectReference Include="..\Domain\BusinesEngine\BusinesEngine.csproj" />
-    <ProjectReference Include="..\Domain\HangfireTestProj\HangfireTestProj.csproj" />
-    <ProjectReference Include="..\Domain\MapperService\MapperService.csproj" />
-    <ProjectReference Include="..\Shared\DtoForApi\DtoForApi.csproj" />
-    <ProjectReference Include="..\Shared\DTOs\DTOs.csproj" />
+    <ProjectReference Include="..\Shared\DTOModels\DTOModels.csproj" />
   </ItemGroup>
 
 </Project>

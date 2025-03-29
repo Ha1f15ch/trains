@@ -1,7 +1,11 @@
-﻿using BusinesEngine.Services;
+﻿using BusinesEngine.Commands.UsersCommand;
+using BusinesEngine.Commands.UsersCommand.Queries;
+using BusinesEngine.Services;
 using BusinesEngine.Services.ServiceInterfaces;
+using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
-using DtoForApi;
+using DTOModels;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -18,86 +22,115 @@ namespace WebApiApp.Controllers
         private readonly ISubscriptionRepository _subscriptionRepository;
         private readonly IBookRepository _bookRepository;
 		private readonly JsonStringHandlerService _jsonStringHandlerService;
+        private readonly IMediator _mediator;
 
 		public SimpleController(
             ILogService logService,
 			IUserRepository userRepository,
             ISubscriptionRepository subscriptionRepository,
             IBookRepository bookRepository,
-			JsonStringHandlerService jsonStringHandlerService)
+			JsonStringHandlerService jsonStringHandlerService,
+            IMediator mediator)
         {
             _logService = logService;
             _userRepository = userRepository;
             _subscriptionRepository = subscriptionRepository;
             _bookRepository = bookRepository;
             _jsonStringHandlerService = jsonStringHandlerService;
+            _mediator = mediator;
         }
 
         [AllowAnonymous]
         [HttpPost("add-user")]
         public async Task<IActionResult> CreateNewUser([FromBody] UserDto userData)
         {
-			if(userData is null)
-            {
-                _logService.LogInformation($"{nameof(CreateNewUser)} - в параметре userData был передан - {userData}");
-                BadRequest("Объект User не может быть равен null");
-            }
+			if (userData is null)
+			{
+				return BadRequest("Объект User не может быть равен null");
+			}
 
-            Console.WriteLine($"name = {userData.Name}, \nemail = {userData.Email}, \npassword = {userData.Password}");
+			var command = new CreateNewUserCommand //Заменит ьна автомаппер, скорее всего
+			{
+				Name = userData.Name,
+				Email = userData.Email,
+				Password = userData.Password,
+				IsActive = true,
+				DateCreate = DateTime.UtcNow,
+				DateUpdate = DateTime.UtcNow,
+				DateDelete = DateTime.MinValue
+			};
 
-            if(!string.IsNullOrEmpty(userData.Name) && !string.IsNullOrEmpty(userData.Email) && !string.IsNullOrEmpty(userData.Password))
-            {
-                var result = await _userRepository.CreateNewUser(userData.Name, userData.Email, userData.Password, true, DateTime.UtcNow, DateTime.UtcNow, DateTime.MinValue);
+			var result = await _mediator.Send(command);
 
-                var serializedResult = await _jsonStringHandlerService.SerializeSingle(result);
+			var serializedResult = await _jsonStringHandlerService.SerializeSingle(result);
 
-				return Ok(serializedResult);
-            }
-            else
-            {
-                return BadRequest(404);
-            }
-        }
+			return Ok(serializedResult);
+		}
 
         [HttpGet("get-all-users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _userRepository.GetAllUsers();
+			var query = new GetAllUsersQuery();
+			var users = await _mediator.Send(query);
 
-            return Ok(users);
-        }
+			return Ok(users);
+		}
 
         [HttpGet("get-user-by-id/{userId}")]
         public async Task<IActionResult> GetUserById(int userId)
         {
-            var userById = await _userRepository.GetUserById(userId);
+            var command = new GetUserByIdCommand
+            {
+                UserId = userId
+            };
 
-            if (userById == null) return BadRequest(405);
+            var user = await _mediator.Send(command);
 
-            return Ok(userById);
+            return Ok(user);
         }
 
-        [HttpPost("subscribe")]
+        [HttpPost("books/{bookId}/subscribe")]
         public async Task<IActionResult> Subscribe(int userId, int bookId)
         {
-            var subscription = await _subscriptionRepository.SubscribeUserToBook(userId, bookId);
-
-            if (subscription == null) return BadRequest("Подписаться на книгу не получилось");
-
-            return Ok(new
+            try
             {
-                Message = "Подписка успешно создана.",
-                Subscription = subscription,
-                Notification = "Уведомление будет отправлено через 5 секунд."
-            });
+				var command = new UserSubscriptionToBookCommand
+				{
+					UserId = userId,
+					BookId = bookId
+				};
+
+				var result = _mediator.Send(command);
+
+				return Ok(new
+				{
+					Message = "Подписка успешно создана.",
+					Subscription = result,
+					Notification = "Уведомление будет отправлено через 5 секунд."
+				});
+			}
+            catch(Exception ex)
+            {
+				return BadRequest("Подписаться на книгу не получилось");
+			}
         }
 
-        [HttpGet("subscriptions/{userId}")]
+        [HttpGet("users/{userId}/subscriptions")]
         public async Task<IActionResult> GetSubscriptions(int userId)
         {
-            var subscriptions = await _subscriptionRepository.GetUserSubscriptions(userId);
+            var command = new GetUserSubscriptionsQuery
+            {
+                UserId = userId
+            };
 
-            return Ok(subscriptions);
+            var userSubscriptions = await _mediator.Send(command);
+
+            if(userSubscriptions is null)
+            {
+                return BadRequest("Подписок не найдено");
+            }
+
+            return Ok(userSubscriptions);
         }
 
         [HttpGet("get-all-books")]

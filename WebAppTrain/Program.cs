@@ -11,13 +11,10 @@ using WebApiApp.LogInfrastructure;
 using WebAppTrain.LogInfrastructure;
 using BusinesEngine.Events;
 using BusinesEngine.Services.ServiceInterfaces;
-using ApiClients;
-using CommonInterfaces.ApiClients;
-using MapperService;
 using Hangfire;
 using Hangfire.PostgreSql;
-using HangfireTestProj;
-using HangfireTestProj.Jobs;
+using BusinesEngine.Commands.UsersCommand;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +27,10 @@ var logConfigurator = new LogServiceConfigurator(builder.Configuration);
 logConfigurator.Configure();
 
 // настройка Mediatr
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+builder.Services.AddMediatR(cfg =>
+{
+	cfg.RegisterServicesFromAssembly(typeof(CreateNewUserCommand).Assembly);
+});
 
 // Конфигурация подключения к сервису RabbitMQ - развернут локально на ПК 
 builder.Services.AddSingleton<IConnection>(provider =>
@@ -81,14 +81,14 @@ builder.Services.AddSwaggerGen(
         });
     });
 // Настройка Api клиента
-builder.Services.AddHttpClient<ApiClient>(client =>
+/*builder.Services.AddHttpClient<ApiClient>(client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
     client.Timeout = TimeSpan.FromMinutes(5);
-});
+});*/
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-builder.Services.AddScoped<IApiClient, ApiClient>();
+/*builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<IApiClient, ApiClient>();*/
 builder.Services.AddSingleton<ILogService, LogService>();
 builder.Services.AddScoped<LogSubscriber>();
 builder.Services.AddScoped<NewsPublisher>();
@@ -102,7 +102,7 @@ builder.Services.AddTransient<INewsChannelRepository, NewsChannelRepository>();
 builder.Services.AddTransient<INewsChannelsPostsRepository, NewsChannelsPostsRepository>();
 builder.Services.AddTransient<INewsChannelsSubscribersRepository, NewsChannelsSubscribersRepository>();
 // Класс c di для джоба
-builder.Services.AddScoped<EmailSenderWeekDelayJob>();
+/*builder.Services.AddScoped<EmailSenderWeekDelayJob>();*/
 //игнорировать дефолт авторизацию в контроллере (api клиенте)
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
@@ -144,7 +144,7 @@ app.MapControllers();
 app.UseHangfireDashboard(); // Включить поддержку hangfire дашбордов
 
 // Запускаем джобы
-JobExecution.StartJobs();
+/*JobExecution.StartJobs();*/
 
 // Проверка доступа БД перед запуском приложения
 using (var scope = app.Services.CreateScope())

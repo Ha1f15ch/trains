@@ -3,70 +3,56 @@ using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using DTOs;
-using BusinesEngine.Events;
-using BusinesEngine.Services.ServiceInterfaces;
+using DTOModels;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
     public class SubscriptionRepository : ISubscriptionRepository
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ILogService _logService;
-        private readonly IMediator _mediator;
 
-        public SubscriptionRepository(AppDbContext appDbContext, ILogService logService, IMediator mediator)
+        public SubscriptionRepository(AppDbContext appDbContext)
         {
             _appDbContext = appDbContext;
-            _logService = logService;
-            _mediator = mediator;
         }
 
         //Поиск подписок пользователя по userId
-        public async Task<List<Subscription>> GetUserSubscriptions(int userId)
+        public async Task<List<Subscription?>> GetUserSubscriptions(int userId)
         {
-            try
-            {
-                //Проверяем, есть ли пользователь
-                var userExists = await _appDbContext.Users.AnyAsync(u => u.Id == userId);
+			try
+			{
+				// Получаем подписки пользователя за один запрос
+				var userSubscriptions = await _appDbContext.Subscriptions
+					.Where(sub => sub.UserId == userId)
+					.ToListAsync();
 
-                if(userExists)
-                {
-                    _logService.LogInformation($"{nameof(GetUserSubscriptions)} - Выполняется поиск подписок пользователя - {userId}.");
-                    
-                    var serSubscriptions = await _appDbContext.Subscriptions.Where(sub => sub.UserId == userId).ToListAsync();
-
-                    _logService.LogInformation($"Найдено записей - {serSubscriptions.Count}");
-
-                    return serSubscriptions;
+				// Если пользователь не существует, подписок не будет
+				if (!userSubscriptions.Any())
+				{
+					return new List<Subscription?>();
 				}
 
-                throw new ArgumentException($"Пользователь с ID {userId} не найден.");
-            }
-            catch (Exception ex)
-            {
-                _logService.LogError($"{nameof(GetUserSubscriptions)} - Возникла ошибка при выполнении метода поиска подписок для пользователя {userId}. Ошибка - {ex.Message}");
-                throw;
-            }
-        }
+				return userSubscriptions;
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Не удалось получить подписки для пользователя ID {userId}.", ex);
+			}
+		}
 
         public async Task<Subscription> SubscribeUserToBook(int userId, int bookId)
         {
             try
             {
-				_logService.LogWarning($"Проверка входных параметров");
-
 				// Валидация параметра userId
 				if (userId <= 0)
                 {
-                    _logService.LogWarning($"Передано некорректное значение для userId.");
                     throw new ArgumentException("Параметр userId не может быть меньше или равно 0");
                 }
 
 				// Валидация параметра bookId
 				if (bookId <= 0)
 				{
-					_logService.LogWarning($"Передано некорректное значение для bookId.");
 					throw new ArgumentException("Параметр bookId не может быть меньше или равно 0");
 				}
 
@@ -76,25 +62,19 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
                 if (subscriber is null)
                 {
-                    _logService.LogWarning($"Запись - subscriber не найдена. {subscriber}");
                     throw new NullReferenceException($"Запись по userId не найдена. subscriber = null");
                 }
 
                 if(book is null)
                 {
-                    _logService.LogWarning($"Запись - book не найдена. {book}");
 					throw new NullReferenceException($"Запись по bookId не найдена. book = null");
 				}
-
-				_logService.LogInformation($"проверка, является ли пользователь с userId = {userId} подписчиком на книгу - {bookId}");
 
 				var existingSubscription = subscriber.Subscriptions.SingleOrDefault(subs => subs.BookId == book.Id);
 
                 //Если его нет
                 if(existingSubscription is null)
                 {
-                    _logService.LogInformation($"Создание новой записи подписки пользователя - {userId} на книгу - {bookId}");
-
                     //Создание экземпляра подписки для сохранения в контексте
                     var newSubscription = new Subscription
                     {
@@ -114,21 +94,13 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                         SubscriptionDate = newSubscription.SubscriptionDate
                     };
 
-                    //Вызов события в сервисе mediatr, передача в него специального типа данных 
-                    await _mediator.Publish(new SubscriptionCreatedEvent(subscriptionDto));
-
-                    _logService.LogInformation($"{nameof(SubscribeUserToBook)} - Выполняется оповещение пользователя {userId} о том, что подписка на книгу {bookId} выполнена успешно. Была создана запись подписки {subscriptionDto} - {nameof(subscriptionDto)}");
-
                     return newSubscription;
                 }
-
-				_logService.LogInformation($"Пользователь с userId = {userId} уже подписан на книгу boolId = {bookId}");
 
 				return existingSubscription;
             }
             catch(Exception ex)
             {
-                _logService.LogError($"{nameof(SubscribeUserToBook)} - Возникла ошибка при выполнении метода создания подписки пользователя {userId} на книгу - {bookId}. Ошибка - {ex.Message}");
                 throw;
             }
         }
