@@ -21,7 +21,7 @@ namespace BusinesEngine.MediatorInstruction.Handlers.ChannelPostHandlers
 
 		public async Task<NewsChannelsPosts?> Handle(CreateNewNewsChannelsPostCommand request, CancellationToken cancellationToken)
 		{
-			return await _newsChannelsPostsRepository.CreateNewNewsChannelsPost(request.NewChannelId, request.TitlePost, request.BodyPost, request.FooterPost, request.AauthorPost, request.SourceImage);
+			return await _newsChannelsPostsRepository.CreateNewNewsChannelsPost(request.NewsChannelId, request.TitlePost, request.BodyPost, request.FooterPost, request.AauthorPost, request.SourceImage);
 		}
 	}
 }
