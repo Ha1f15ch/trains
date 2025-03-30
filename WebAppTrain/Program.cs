@@ -5,15 +5,9 @@ using DatabaseEngine.RepositoryStorage.Interfaces;
 using DatabaseEngine.RepositoryStorage.Repositories;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 using System.Text.Json.Serialization;
-using WebApiApp.LogInfrastructure;
-using WebAppTrain.LogInfrastructure;
-using BusinesEngine.Events;
-using BusinesEngine.Services.ServiceInterfaces;
 using Hangfire;
 using Hangfire.PostgreSql;
-using Microsoft.Extensions.DependencyInjection;
 using BusinesEngine.MediatorInstruction.Commands.UsersCommand;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,9 +16,6 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // Строка подключения к БД для hangfire
 var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection");
-
-var logConfigurator = new LogServiceConfigurator(builder.Configuration);
-logConfigurator.Configure();
 
 // настройка Mediatr
 builder.Services.AddMediatR(cfg =>
@@ -89,10 +80,6 @@ builder.Services.AddSwaggerGen(
 
 /*builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<IApiClient, ApiClient>();*/
-builder.Services.AddSingleton<ILogService, LogService>();
-builder.Services.AddScoped<LogSubscriber>();
-builder.Services.AddScoped<NewsPublisher>();
-builder.Services.AddScoped<EmailNotificationService>();
 builder.Services.AddScoped<JsonStringHandlerService>();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
@@ -159,13 +146,11 @@ using (var scope = app.Services.CreateScope())
         await context.Database.EnsureCreatedAsync();
         await context.Database.CanConnectAsync();
 
-        var logService = service.GetRequiredService<ILogService>();
-        logService.LogInformation("Подключение к БД выполнено успешно");
+        Console.WriteLine("Подключение к БД выполнено успешно");
     }
     catch (Exception ex)
     {
-        var logService = service.GetRequiredService<ILogService>();
-        logService.LogError($"Подключение к БД не выполнено. Возникшая ошибка: {ex.Message}");
+		Console.WriteLine($"Подключение к БД не выполнено. Возникшая ошибка: {ex.Message}");
     }
 }
 
@@ -179,8 +164,7 @@ using (var scope = app.Services.CreateScope())
         var rabbitMqConnection = service.GetRequiredService<IConnection>();
         if(rabbitMqConnection.IsOpen)
         {
-            var logService = service.GetRequiredService<ILogService>();
-            logService.LogInformation("Подключение к RabbitMQ выполнено успешно");
+            Console.WriteLine("Подключение к RabbitMQ выполнено успешно");
 		}
         else
         {
@@ -190,8 +174,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch(Exception ex)
     {
-        var logService = service.GetRequiredService<ILogService>();
-		logService.LogError($"Подключение к RabbitMQ не выполнено. Возникшая ошибка: {ex.Message}");
+		Console.WriteLine($"Подключение к RabbitMQ не выполнено. Возникшая ошибка: {ex.Message}");
 		throw;
 	}
 }
