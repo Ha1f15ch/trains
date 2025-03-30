@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\ServiceInterfaces\**" />
+    <EmbeddedResource Remove="Services\ServiceInterfaces\**" />
+    <None Remove="Services\ServiceInterfaces\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.1" />
@@ -21,7 +27,6 @@
 
   <ItemGroup>
     <Folder Include="MediatorInstruction\Commands\NewsChannelSubscribersCommand\Queries\" />
-    <Folder Include="Services\ServiceInterfaces\" />
   </ItemGroup>
 
 </Project>
