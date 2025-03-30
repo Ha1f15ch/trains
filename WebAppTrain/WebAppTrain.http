@@ -1,6 +1,0 @@
-@WebAppTrain_HostAddress = http://localhost:5009
-
-GET {{WebAppTrain_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
