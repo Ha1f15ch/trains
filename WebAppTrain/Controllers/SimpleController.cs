@@ -1,4 +1,6 @@
-﻿using BusinesEngine.Commands.UsersCommand;
+﻿using BusinesEngine.Commands.BookCommand;
+using BusinesEngine.Commands.BookCommand.Queries;
+using BusinesEngine.Commands.UsersCommand;
 using BusinesEngine.Commands.UsersCommand.Queries;
 using BusinesEngine.Services;
 using BusinesEngine.Services.ServiceInterfaces;
@@ -127,38 +129,55 @@ namespace WebApiApp.Controllers
 
             if(userSubscriptions is null)
             {
-                return BadRequest("Подписок не найдено");
-            }
+				Console.WriteLine("Подписок не найдено");
+				return Ok(userSubscriptions);
+			}
 
             return Ok(userSubscriptions);
         }
 
-        [HttpGet("get-all-books")]
+        [HttpGet("books/get-all-books")]
         public async Task<IActionResult> GetAllBooks()
         {
-            var books = await _bookRepository.GetAllBooks();
+            var command = new GetAllBooksQuery();
 
-            return Ok(books);
+            var result = await _mediator.Send(command);
+
+            return Ok(result);
         }
 
-        [HttpPost("get-books-by/{title}")]
+        [HttpPost("books/get-books-by-titleName/{title}")]
         public async Task<IActionResult> GetBooksByTitle(string title)
         {
-            var booksByTitle = await _bookRepository.GetBookByName(title);
+            var command = new GetBookByNameCommand { PartTitleName = title };
 
-            if (booksByTitle == null) return BadRequest("Для поиска переданы некорректные данные или в системе нет подходящих записей.");
+            var books = await _mediator.Send(command);
 
-            return Ok(booksByTitle);
+            return Ok(books);
         }
 
         [HttpPost("crate-new-book")]
         public async Task<IActionResult> CreateNewBook(string title, string? description, string? author, int? countList, string? createdAt)
         {
-            var newBook = await _bookRepository.CreateNewBook(title, true, description, author, countList, createdAt, DateTime.UtcNow);
+            var command = new CreateNewBookCommand
+            {
+                Title = title,
+                IsActive = true,
+                Description = description,
+                Author = author,
+                CountList = countList,
+                CreatedAt = createdAt,
+                UpdateDate = DateTime.UtcNow
+            };
 
-            if (newBook == null) return BadRequest("Для создания записи Book переданы некорректные данные. попробуйте позднее");
+            var result = await _mediator.Send(command);
 
-            return Ok(newBook);
-        }
+            if (result != null)
+            {
+                return Ok("Книга не создана");
+            }
+
+            return Ok(result);
+		}
     }
 }
