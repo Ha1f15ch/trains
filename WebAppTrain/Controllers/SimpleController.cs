@@ -47,9 +47,7 @@ namespace WebApiApp.Controllers
 
 			var result = await _mediator.Send(command);
 
-			var serializedResult = await _jsonStringHandlerService.SerializeSingle(result);
-
-			return Ok(serializedResult);
+			return Ok(result);
 		}
 
         [HttpGet("get-all-users")]
@@ -85,7 +83,7 @@ namespace WebApiApp.Controllers
 					BookId = bookId
 				};
 
-				var result = _mediator.Send(command);
+				var result = await _mediator.Send(command);
 
 				return Ok(new
 				{
@@ -96,7 +94,7 @@ namespace WebApiApp.Controllers
 			}
             catch(Exception ex)
             {
-				return BadRequest("Подписаться на книгу не получилось");
+				return BadRequest($"Подписаться на книгу не получилось. Ошибка - {ex.Message}");
 			}
         }
 
