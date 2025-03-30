@@ -1,45 +1,37 @@
-﻿using BusinesEngine.Services.ServiceInterfaces;
-using DatabaseEngine.Models;
+﻿using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
     public class NewsChannelsSubscribersRepository : INewsChannelsSubscribersRepository
     {
         private readonly AppDbContext _appDbContext;
-        private readonly ILogService _logService;
 
-        public NewsChannelsSubscribersRepository(AppDbContext appDbContext, ILogService logService)
+        public NewsChannelsSubscribersRepository(AppDbContext appDbContext)
         {
             _appDbContext = appDbContext;
-			_logService = logService;
         }
 
         public async Task<NewsChannelsSubscribers> SubscribeUserToNewsChannel(int userId, int newsChannelId)
         {
             try
             {
-                _logService.LogInformation($"Выполняем поиск по id пользователя {userId} и новостной канал {newsChannelId}");
+				Console.WriteLine($"Выполняем поиск по id пользователя {userId} и новостной канал {newsChannelId}");
 
                 var user = await _appDbContext.Users.FindAsync(userId);
                 var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
 
                 if(user is null)
                 {
-                    _logService.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному userId = {userId} пользователь найден не был");
+					Console.WriteLine($"По указанному userId = {userId} пользователь найден не был");
                     throw new NullReferenceException($"Пользователь по userId не был найден - {user} - {nameof(user)}");
                 }
 
 				if (newsChannel is null)
 				{
-					_logService.LogError($"{nameof(SubscribeUserToNewsChannel)} \nПо указанному newsChannelId = {newsChannel} новостной канал найден не был");
+					Console.WriteLine($"По указанному newsChannelId = {newsChannel} новостной канал найден не был");
 					throw new NullReferenceException($"Новостной канал по newsChannelId не был найден - {newsChannel} - {nameof(newsChannel)}");
 				}
 
@@ -51,28 +43,28 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                     CreatedDate = DateTime.UtcNow
                 };
 
-                _logService.LogInformation($"{nameof(SubscribeUserToNewsChannel)} \n Создаем запись подписки - {subscriberValue}");
+                Console.WriteLine($"{nameof(SubscribeUserToNewsChannel)} \n Создаем запись подписки - {subscriberValue}");
 
                 await _appDbContext.NewsChannelsSubscribers.AddAsync( subscriberValue );
 
                 await _appDbContext.SaveChangesAsync();
 
-                _logService.LogInformation($"Успешно добавлено");
+                Console.WriteLine($"Успешно добавлено");
 
                 return subscriberValue;
 			}
             catch (Exception ex)
             {
-                _logService.LogError($"{SubscribeUserToNewsChannel} - {nameof(SubscribeUserToNewsChannel)} - {ex.Message} - Ошибка при выполнении подписки пользователя на новостной канал");
+                Console.WriteLine($"Ошибка при выполнении подписки пользователя на новостной канал - {ex.Message}");
                 throw;
             }
         }
 
-		public async Task<List<User>?> GetSubscribersByChannelId(int newsChannelId)
+		public async Task<List<User>> GetSubscribersByChannelId(int newsChannelId)
 		{
 			try
 			{
-                _logService.LogInformation($"Поиск подписавшихся пользователей по {nameof(newsChannelId)} = {newsChannelId}");
+                Console.WriteLine($"Поиск подписавшихся пользователей по {nameof(newsChannelId)} = {newsChannelId}");
 
 				//Поиск по свойствам связанных таблиц. Поиск пользователей через newsChannelId. Подписчики
 				var users = await _appDbContext.NewsChannelsSubscribers
@@ -80,14 +72,14 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 					.Include(ncs => ncs.User) // Загрузка связи User для получения email
 					.Select(ncs => ncs.User).ToListAsync();
 
-                _logService.LogInformation($"Найдено {users.Count} записей");
+                Console.WriteLine($"Найдено {users.Count} записей");
 
                 return users;
 			}
 			catch (Exception ex)
 			{
-				_logService.LogError($"Ошибка при получении подписчиков канала с Id = {newsChannelId}. {ex.Message}");
-				throw;
+				Console.WriteLine($"Ошибка при получении подписчиков канала с Id = {newsChannelId}. {ex.Message}");
+                return new List<User>();
 			}
 		}
 

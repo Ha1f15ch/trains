@@ -1,17 +1,12 @@
-﻿using BusinesEngine.Commands.BookCommand;
-using BusinesEngine.Commands.BookCommand.Queries;
-using BusinesEngine.Commands.UsersCommand;
-using BusinesEngine.Commands.UsersCommand.Queries;
+﻿using BusinesEngine.MediatorInstruction.Commands.BookCommand;
+using BusinesEngine.MediatorInstruction.Commands.BookCommand.Queries;
+using BusinesEngine.MediatorInstruction.Commands.UsersCommand;
+using BusinesEngine.MediatorInstruction.Commands.UsersCommand.Queries;
 using BusinesEngine.Services;
-using BusinesEngine.Services.ServiceInterfaces;
-using DatabaseEngine.Models;
-using DatabaseEngine.RepositoryStorage.Interfaces;
 using DTOModels;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace WebApiApp.Controllers
 {
@@ -19,25 +14,13 @@ namespace WebApiApp.Controllers
     [Route("main/")]
     public class SimpleController : Controller
     {
-        private readonly ILogService _logService;
-		private readonly IUserRepository _userRepository;
-        private readonly ISubscriptionRepository _subscriptionRepository;
-        private readonly IBookRepository _bookRepository;
 		private readonly JsonStringHandlerService _jsonStringHandlerService;
         private readonly IMediator _mediator;
 
 		public SimpleController(
-            ILogService logService,
-			IUserRepository userRepository,
-            ISubscriptionRepository subscriptionRepository,
-            IBookRepository bookRepository,
 			JsonStringHandlerService jsonStringHandlerService,
             IMediator mediator)
         {
-            _logService = logService;
-            _userRepository = userRepository;
-            _subscriptionRepository = subscriptionRepository;
-            _bookRepository = bookRepository;
             _jsonStringHandlerService = jsonStringHandlerService;
             _mediator = mediator;
         }
@@ -51,7 +34,7 @@ namespace WebApiApp.Controllers
 				return BadRequest("Объект User не может быть равен null");
 			}
 
-			var command = new CreateNewUserCommand //Заменит ьна автомаппер, скорее всего
+			var command = new CreateNewUserCommand //Заменить на автомаппер, скорее всего
 			{
 				Name = userData.Name,
 				Email = userData.Email,
@@ -146,7 +129,7 @@ namespace WebApiApp.Controllers
             return Ok(result);
         }
 
-        [HttpPost("books/get-books-by-titleName/{title}")]
+        [HttpPost("books/get-books-by-titleName/{title}")]//Поиск по частичному совпадению
         public async Task<IActionResult> GetBooksByTitle(string title)
         {
             var command = new GetBookByNameCommand { PartTitleName = title };
@@ -156,7 +139,7 @@ namespace WebApiApp.Controllers
             return Ok(books);
         }
 
-        [HttpPost("crate-new-book")]
+        [HttpPost("books/crate-new-book")]
         public async Task<IActionResult> CreateNewBook(string title, string? description, string? author, int? countList, string? createdAt)
         {
             var command = new CreateNewBookCommand

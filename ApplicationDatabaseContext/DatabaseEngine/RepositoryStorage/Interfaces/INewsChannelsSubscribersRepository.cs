@@ -10,7 +10,7 @@ namespace DatabaseEngine.RepositoryStorage.Interfaces
     public interface INewsChannelsSubscribersRepository
     {
         public Task<NewsChannelsSubscribers> SubscribeUserToNewsChannel(int userId, int newsChannelId);
-        public Task<List<User>?> GetSubscribersByChannelId(int newsChannelId);
+        public Task<List<User>> GetSubscribersByChannelId(int newsChannelId);
 
 	}
 }

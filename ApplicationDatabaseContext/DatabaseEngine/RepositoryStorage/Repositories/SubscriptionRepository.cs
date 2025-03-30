@@ -17,7 +17,7 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         }
 
         //Поиск подписок пользователя по userId
-        public async Task<List<Subscription?>> GetUserSubscriptions(int userId)
+        public async Task<List<Subscription>> GetUserSubscriptions(int userId)
         {
 			try
 			{
@@ -29,14 +29,15 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 				// Если пользователь не существует, подписок не будет
 				if (!userSubscriptions.Any())
 				{
-					return new List<Subscription?>();
+					return new List<Subscription>();
 				}
 
 				return userSubscriptions;
 			}
 			catch (Exception ex)
 			{
-				throw new InvalidOperationException($"Не удалось получить подписки для пользователя ID {userId}.", ex);
+				Console.WriteLine($"Не удалось получить подписки для пользователя ID {userId}.", ex);
+                return new List<Subscription>();
 			}
 		}
 

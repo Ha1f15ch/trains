@@ -13,7 +13,7 @@ namespace DatabaseEngine.RepositoryStorage.Interfaces
         public Task<NewsChannel?> CreateNewNewsChannel(NewsChannelDto newsChannelDto);
         public Task<NewsChannel?> GetNewsChannelById(int newsChannelId);
         public Task<NewsChannel?> GetNewsChannelByName(string newsChannelName);
-        public Task<List<NewsChannel>?> GetAllNewsChannels();
-        public Task<List<NewsChannel>?> GetNewsChannelsByPartName(string newsChannelName);
+        public Task<List<NewsChannel>> GetAllNewsChannels();
+        public Task<List<NewsChannel>> GetNewsChannelsByPartName(string newsChannelName);
     }
 }

@@ -19,4 +19,9 @@
     <ProjectReference Include="..\..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="MediatorInstruction\Commands\NewsChannelSubscribersCommand\Queries\" />
+    <Folder Include="Services\ServiceInterfaces\" />
+  </ItemGroup>
+
 </Project>

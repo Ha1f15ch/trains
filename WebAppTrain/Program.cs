@@ -13,8 +13,8 @@ using BusinesEngine.Events;
 using BusinesEngine.Services.ServiceInterfaces;
 using Hangfire;
 using Hangfire.PostgreSql;
-using BusinesEngine.Commands.UsersCommand;
 using Microsoft.Extensions.DependencyInjection;
+using BusinesEngine.MediatorInstruction.Commands.UsersCommand;
 
 var builder = WebApplication.CreateBuilder(args);
 

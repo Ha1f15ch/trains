@@ -1,8 +1,11 @@
-﻿using BusinesEngine.Events;
-using BusinesEngine.Services;
-using BusinesEngine.Services.ServiceInterfaces;
-using DatabaseEngine.RepositoryStorage.Interfaces;
-using DTOs;
+﻿using BusinesEngine.MediatorInstruction.Commands.ChannelCommand;
+using BusinesEngine.MediatorInstruction.Commands.ChannelCommand.Queries;
+using BusinesEngine.MediatorInstruction.Commands.ChannelPost;
+using BusinesEngine.MediatorInstruction.Commands.ChannelPost.Queries;
+using BusinesEngine.MediatorInstruction.Commands.NewsChannelSubscribersCommand;
+using BusinesEngine.MediatorInstruction.Commands.UsersCommand.Queries;
+using DTOModels;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,63 +16,29 @@ namespace WebAppTrain.Controllers
 	[AllowAnonymous] //Временное решение, так как для реального рабочего Api необходимо настраивать авторизацию в заголовках 
 	public class ObserverController : Controller
 	{
-		private readonly NewsPublisher _newsPublisher;
-		private readonly LogSubscriber _logSubscriber;
+		private readonly IMediator _mediator;
 
-		private readonly IUserRepository _userRepository;
-		private readonly INewsChannelRepository _newsChannelRepository;
-		private readonly INewsChannelsPostsRepository _newsChannelsPostsRepository;
-		private readonly INewsChannelsSubscribersRepository _newsChannelsSubscribersRepository;
-
-		private readonly EmailNotificationService _emailNotificationService;
-		private readonly JsonStringHandlerService _jsonStringHandlerService;
-
-		private readonly ILogService _logService;
-
-		public ObserverController(
-			NewsPublisher newsPublisher,
-			LogSubscriber logSubscriber,
-			IUserRepository userRepository, 
-			INewsChannelRepository newsChannelRepository, 
-			INewsChannelsPostsRepository newsChannelsPostsRepository, 
-			INewsChannelsSubscribersRepository newsChannelsSubscribersRepository, 
-			EmailNotificationService emailNotificationService, 
-			JsonStringHandlerService jsonStringHandlerService,
-			ILogService logService)
+		public ObserverController(IMediator mediator)
 		{
-			_newsPublisher = newsPublisher;
-			_newsPublisher.Subscribe(logSubscriber);
-
-			_userRepository = userRepository;
-			_newsChannelRepository = newsChannelRepository;
-			_newsChannelsPostsRepository = newsChannelsPostsRepository;
-			_newsChannelsSubscribersRepository = newsChannelsSubscribersRepository;
-			
-			_logService = logService;
-			_emailNotificationService = emailNotificationService;
-			_jsonStringHandlerService = jsonStringHandlerService;
+			_mediator = mediator;
 		}
 
-		[HttpGet("channel/all")]
+		[HttpGet("channels/all")]
 		public async Task<IActionResult> GetAllNewsChannels()
 		{
-			var result = await _newsChannelRepository.GetAllNewsChannels();
+			var command = new GetAllNewsChannelsQuery();
 
-			// Пытаемся конвертировать данные в нормальный вид 
-			var serializedResult = await _jsonStringHandlerService.SerializeList(result);
+			var result = await _mediator.Send(command);
 
-			return Ok(serializedResult);
+			return Ok(result);
 		}
 
 		[HttpGet("channel/{channelId}")]
 		public async Task<IActionResult> GetNewsChannelById(int channelId)
 		{
-			var result = await _newsChannelRepository.GetNewsChannelById(channelId);
+			var command = new GetNewsChannelByIdCommand { NewsChannelId = channelId };
 
-			if(result is null)
-			{
-				return BadRequest(404);
-			}
+			var result = await _mediator.Send(command);
 
 			return Ok(result);
 		}
@@ -77,123 +46,89 @@ namespace WebAppTrain.Controllers
 		[HttpPost("channel/find-by-partName/{partName}")]
 		public async Task<IActionResult> GetNewsChannelsByPartName(string partName)
 		{
-			var foundedNewsChannels = await _newsChannelRepository.GetNewsChannelsByPartName(partName);
+			var command = new GetNewsChannelsByPartNameCommand { PartChannelName = partName };
 
-			return Ok(foundedNewsChannels);
+			var result = await _mediator.Send(command);
+
+			return Ok(result);
 		}
 
 		[HttpPost("channel/find-by-name/{channelName}")]
 		public async Task<IActionResult> GetNewsChannelsByName(string channelName)
 		{
-			var foundedNewsChannels = await _newsChannelRepository.GetNewsChannelByName(channelName);
+			var command = new GetNewsChannelByNameCommand { FullNewsChannelName = channelName };
 
-			return Ok(foundedNewsChannels);
+			var result = await _mediator.Send(command);
+
+			return Ok(result);
 		}
 
 		[HttpPost("channel/create-new")]
 		public async Task<IActionResult> CreateNewNewsChannel([FromBody] NewsChannelDto newsChannelDto)
 		{
-			_logService.LogInformation($"Создаем новостной канал");
+			var command = new CreateNewNewsChannelCommand { NewsChannel = newsChannelDto };
 
-			var newNewsChannel = await _newsChannelRepository.CreateNewNewsChannel(newsChannelDto);
+			var result = await _mediator.Send(command);
 
-			if(newNewsChannel is null)
-			{
-				_logService.LogError($"Переданы некорректные данные для создания записи");
-
-				return BadRequest(404);
-			}
-
-			_logService.LogInformation($"Успешно создано");
-
-			return Ok(newNewsChannel);
+			return Ok(result);
 		}
 
 		[HttpGet("channel/{channelId}/all-posts")]
 		public async Task<IActionResult> GetAllPostsByChannelId(int channelId)
 		{
-			var posts = await _newsChannelsPostsRepository.GetAllPostsByNewsChannelId(channelId);
+			var command = new GetAllPostsByNewsChannelIdQuery { NewsChannelId = channelId };
 
-			return Ok(posts);
+			var result = await _mediator.Send(command);
+
+			return Ok(result);
 		}
 
 		[HttpGet("channel/{channelId}/subscribers")]
 		public async Task<IActionResult> GetNewsChannelSubscribers(int channelId)
 		{
-			var subscribers = await _newsChannelsSubscribersRepository.GetSubscribersByChannelId(channelId);
+			var command = new GetSubscribersByChannelIdQuery { NewsChannelId = channelId };
 
-			return Ok(subscribers);
+			var result = await _mediator.Send(command);
+
+			return Ok(result);
 		}
 
 		[HttpPost("channel/{channelId}/subscribe")]
 		public async Task<IActionResult> SubscribeToNewsChannel(int userId, int channelId)
 		{
-			_logService.LogInformation($"User with Id = {userId} подписывается на новостной канал с Id = {channelId}");
+			var command = new SubscribeUserToNewsChannelCommand { UserId = userId, NewsChannelId= channelId };
 
-			var resultSubscription = await _newsChannelsSubscribersRepository.SubscribeUserToNewsChannel(userId, channelId);
+			var result = await _mediator.Send(command);
 
-			if(resultSubscription is null)
-			{
-				_logService.LogError($"{SubscribeToNewsChannel} - {nameof(SubscribeToNewsChannel)} - Подписка не была выполнена успешно. resultSubscription = {resultSubscription}");
-
-				return BadRequest(404);
-			}
-
-			var user = await _userRepository.GetUserById(userId);
-
-			if(user != null && !string.IsNullOrEmpty(user.Email))
-			{
-				//отправить событие - в логи о том, что пользователь подписался на новостной канал
-				await _newsPublisher.NotifySubscribers($"Пользователь {userId} подписался на канал - {channelId}");
-
-				//Отправить письмо пользователю на почту о том, что он подписался
-				await _emailNotificationService.SendEmailAsync(user.Email, "Добро пожаловать !!!", $"Рады видеть Вас на Нашем канале. Надеемся Вы найдете у Нас много интересной и полезной информации. Дальнейшая отправка новостей и оповещений будет выполняться на данную почту - {user.Email}");
-			}
-
-			return Ok(resultSubscription);
+			return Ok(result);
 		}
 
-		[HttpPost("posts-by-title/{partTitle}")]
+		[HttpPost("posts/find-by-partTitle/{partTitle}")]
 		public async Task<IActionResult> GetPostsByTitlePart(string partTitle)
 		{
-			var postsByPart = await _newsChannelsPostsRepository.GetAllPostsByPartTitle(partTitle);
-			
-			return Ok(postsByPart);
+			var command = new GetAllPostsByPartTitleQuery { PartNewsChannelPostsName = partTitle };
+
+			var result = await _mediator.Send(command);
+
+			return Ok(result);
 		}
 
 		[HttpPost("channel/{channelId}/create-post")]
 		public async Task<IActionResult> CreateNewNewsChannelPost(int channelId, string title, string bodyPost, string? footerPost, string authorPost, string? sourceImage)
 		{
-			_logService.LogInformation($"{CreateNewNewsChannelPost} - {nameof(CreateNewNewsChannelPost)} - Создаем запись для новостного канала");
-
-			var resultByCreate = await _newsChannelsPostsRepository.CreateNewNewsChannelsPost(channelId, title, bodyPost, footerPost, authorPost, sourceImage);
-
-			if(resultByCreate is null)
+			var command = new CreateNewNewsChannelsPostCommand
 			{
-				return BadRequest(404);
-			}
+				NewsChannelId = channelId,
+				TitlePost = title,
+				BodyPost = bodyPost,
+				FooterPost = footerPost,
+				AauthorPost = authorPost,
+				SourceImage = sourceImage
+			};
 
-			// Получаем email
-			var subscribers = await _newsChannelsSubscribersRepository.GetSubscribersByChannelId(channelId);
-			
-			var subscribersEmailForLog = string.Join(", ", subscribers.Select(s => s.Email));
+			var result = await _mediator.Send(command);
 
-			// Уведомляем в логах 
-			await _newsPublisher.NotifySubscribers($"новостной канал выпустил новый пост, - {channelId}. Заголовок - {title}. Список Email адресов пользователей - {subscribersEmailForLog}");
-
-			if(subscribers is not null)
-			{
-				foreach(var user in subscribers)
-				{
-					if(!string.IsNullOrEmpty(user.Email))
-					{
-						_logService.LogInformation($"выполняется оповещение пользователей через Email - {user.Email}");
-						await _emailNotificationService.SendEmailAsync(user.Email, "Новый пост в канале", $"Новостной канал с id = {channelId} опубликовал пост: \"{title}\".\n\n{bodyPost}");
-					}
-				}
-			}
-
-			return Ok(resultByCreate);
+			return Ok(result);
 		}
 	}
 }
