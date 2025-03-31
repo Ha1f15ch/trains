@@ -1,5 +1,6 @@
 ﻿using Serilog;
 using Serilog.Events;
+using System.Reflection;
 
 namespace Common.Logging
 {
@@ -10,7 +11,7 @@ namespace Common.Logging
 			Log.Logger = new LoggerConfiguration()
 				.MinimumLevel.Debug()
 				.Enrich.FromLogContext()
-				.Enrich.WithProperty("Application", "WebAppTrain")
+				.Enrich.WithProperty("Application", Assembly.GetExecutingAssembly().GetName().Name)
 				.WriteTo.Console(
 					outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}"
 				)

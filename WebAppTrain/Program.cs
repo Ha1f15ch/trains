@@ -134,7 +134,9 @@ using (var scope = app.Services.CreateScope())
 {
     var service = scope.ServiceProvider;
 
-    try
+	var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+	try
     {
         var context = service.GetRequiredService<AppDbContext>();
 
@@ -142,11 +144,11 @@ using (var scope = app.Services.CreateScope())
         await context.Database.EnsureCreatedAsync();
         await context.Database.CanConnectAsync();
 
-        Console.WriteLine("Подключение к БД выполнено успешно");
+		logger.LogInformation("Подключение к БД выполнено успешно");
     }
     catch (Exception ex)
     {
-		Console.WriteLine($"Подключение к БД не выполнено. Возникшая ошибка: {ex.Message}");
+		logger.LogError(ex, $"Подключение к БД не выполнено. Возникшая ошибка: {ex.Message}");
     }
 }
 
@@ -155,12 +157,15 @@ using (var scope = app.Services.CreateScope())
 {
     var service = scope.ServiceProvider;
 
-    try
+	var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+	try
     {
         var rabbitMqConnection = service.GetRequiredService<IConnection>();
         if(rabbitMqConnection.IsOpen)
         {
-            Console.WriteLine("Подключение к RabbitMQ выполнено успешно");
+
+			logger.LogInformation("Подключение к RabbitMQ выполнено успешно");
 		}
         else
         {
@@ -170,7 +175,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch(Exception ex)
     {
-		Console.WriteLine($"Подключение к RabbitMQ не выполнено. Возникшая ошибка: {ex.Message}");
+		logger.LogError(ex, $"Подключение к RabbitMQ не выполнено. Возникшая ошибка: {ex.Message}");
 		throw;
 	}
 }
