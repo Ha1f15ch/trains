@@ -9,6 +9,8 @@ using System.Text.Json.Serialization;
 using Hangfire;
 using Hangfire.PostgreSql;
 using BusinesEngine.MediatorInstruction.Commands.UsersCommand;
+using Serilog;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // Строка подключения к БД для hangfire
 var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection");
+//Инициализация настроек логирования serilog
+Common.Logging.LoggingConfiguration.Configure();
 
+builder.Host.UseSerilog();
 // настройка Mediatr
 builder.Services.AddMediatR(cfg =>
 {
@@ -71,15 +76,7 @@ builder.Services.AddSwaggerGen(
             Description = "API для практики и применения подходов и технологий из roadmap-a"
         });
     });
-// Настройка Api клиента
-/*builder.Services.AddHttpClient<ApiClient>(client =>
-{
-    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-    client.Timeout = TimeSpan.FromMinutes(5);
-});*/
 
-/*builder.Services.AddAutoMapper(typeof(MappingProfile));
-builder.Services.AddScoped<IApiClient, ApiClient>();*/
 builder.Services.AddScoped<JsonStringHandlerService>();
 builder.Services.AddLogging();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
@@ -88,8 +85,7 @@ builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<INewsChannelRepository, NewsChannelRepository>();
 builder.Services.AddTransient<INewsChannelsPostsRepository, NewsChannelsPostsRepository>();
 builder.Services.AddTransient<INewsChannelsSubscribersRepository, NewsChannelsSubscribersRepository>();
-// Класс c di для джоба
-/*builder.Services.AddScoped<EmailSenderWeekDelayJob>();*/
+
 //игнорировать дефолт авторизацию в контроллере (api клиенте)
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
