@@ -14,23 +14,24 @@ namespace WebApiApp.Controllers
     [Route("main/")]
     public class SimpleController : Controller
     {
-		private readonly JsonStringHandlerService _jsonStringHandlerService;
         private readonly IMediator _mediator;
+        private readonly ILogger<SimpleController> _logger;
 
-		public SimpleController(
-			JsonStringHandlerService jsonStringHandlerService,
-            IMediator mediator)
-        {
-            _jsonStringHandlerService = jsonStringHandlerService;
-            _mediator = mediator;
-        }
+		public SimpleController(IMediator mediator, ILogger<SimpleController> logger)
+		{
+			_mediator = mediator;
+			_logger = logger;
+		}
 
-        [AllowAnonymous]
+		[AllowAnonymous]
         [HttpPost("add-user")]
         public async Task<IActionResult> CreateNewUser([FromBody] UserDto userData)
         {
+            _logger.LogInformation($"Получаем {userData}:\nuserData.Name = {userData.Name}\nuserData.Email = {userData.Email}\nuserData.Password = {userData.Password}\n");
+
 			if (userData is null)
 			{
+                _logger.LogWarning($"Объект User не может быть равен null");
 				return BadRequest("Объект User не может быть равен null");
 			}
 
@@ -45,7 +46,11 @@ namespace WebApiApp.Controllers
 				DateDelete = DateTime.MinValue
 			};
 
+            _logger.LogInformation($"Создаем команду для обработчика {command}");
+
 			var result = await _mediator.Send(command);
+
+            _logger.LogInformation($"Получаем результат {command.Name} {result}");
 
 			return Ok(result);
 		}
@@ -54,7 +59,12 @@ namespace WebApiApp.Controllers
         public async Task<IActionResult> GetAllUsers()
         {
 			var query = new GetAllUsersQuery();
+
+			_logger.LogInformation($"Формируем команду для отправки {query}");
+
 			var users = await _mediator.Send(query);
+
+            _logger.LogInformation($"Получили результат {users.Count} users");
 
 			return Ok(users);
 		}
@@ -67,7 +77,11 @@ namespace WebApiApp.Controllers
                 UserId = userId
             };
 
+            _logger.LogInformation($"Формируем запрос для отправки {command} с userId = {userId}");
+
             var user = await _mediator.Send(command);
+
+            _logger.LogInformation($"Получили результат: name - {user?.Name}");
 
             return Ok(user);
         }
@@ -83,7 +97,11 @@ namespace WebApiApp.Controllers
 					BookId = bookId
 				};
 
+                _logger.LogInformation($"Формирование команды для выполнения запроса подписи {command}");
+
 				var result = await _mediator.Send(command);
+
+                _logger.LogInformation($"Получен результат - {result.Id}");
 
 				return Ok(new
 				{
@@ -94,7 +112,8 @@ namespace WebApiApp.Controllers
 			}
             catch(Exception ex)
             {
-				return BadRequest($"Подписаться на книгу не получилось. Ошибка - {ex.Message}");
+				_logger.LogWarning(ex, $"Подписаться на книгу не получилось. {ex.Message}");
+				return BadRequest($"Подписаться на книгу не получилось.");
 			}
         }
 
@@ -106,13 +125,17 @@ namespace WebApiApp.Controllers
                 UserId = userId
             };
 
+            _logger.LogInformation($"Сформирован запрос для поиска подписок пользователя c ID = {command.UserId}");
+
             var userSubscriptions = await _mediator.Send(command);
 
             if(userSubscriptions is null)
             {
-				Console.WriteLine("Подписок не найдено");
+				_logger.LogInformation("Подписок не найдено");
 				return Ok(userSubscriptions);
 			}
+
+            _logger.LogInformation($"Найдено {userSubscriptions.Count} subscriptions пользователя с ID = {command.UserId}");
 
             return Ok(userSubscriptions);
         }
@@ -122,7 +145,11 @@ namespace WebApiApp.Controllers
         {
             var command = new GetAllBooksQuery();
 
+            _logger.LogInformation($"Получить все книги. Сформирован запрос");
+
             var result = await _mediator.Send(command);
+
+            _logger.LogInformation($"Получено {result.Count} книг");
 
             return Ok(result);
         }
@@ -132,7 +159,11 @@ namespace WebApiApp.Controllers
         {
             var command = new GetBookByNameCommand { PartTitleName = title };
 
+            _logger.LogInformation($"Сформирована команда запроса поиска книг по совпадающему TitleName- {command.PartTitleName}");
+
             var books = await _mediator.Send(command);
+
+            _logger.LogInformation($"Получено {books.Count} подходящих books");
 
             return Ok(books);
         }
@@ -151,12 +182,18 @@ namespace WebApiApp.Controllers
                 UpdateDate = DateTime.UtcNow
             };
 
-            var result = await _mediator.Send(command);
+			_logger.LogInformation($"Команда для отправки сформирована - {command}");
 
-            if (result != null)
+			var result = await _mediator.Send(command);
+
+            if (result == null)
             {
+                _logger.LogWarning($"Книга не создана result = null");
+
                 return Ok("Книга не создана");
             }
+
+            _logger.LogInformation($"Получен результат - {result.Id}, {result.Title}");
 
             return Ok(result);
 		}
