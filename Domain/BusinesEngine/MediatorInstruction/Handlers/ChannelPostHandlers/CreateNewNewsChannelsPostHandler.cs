@@ -41,7 +41,7 @@ namespace BusinesEngine.MediatorInstruction.Handlers.ChannelPostHandlers
 				else
 				{
 					_logger.LogInformation("Пост успешно создан. ID: {PostId}, Title: {TitlePost}, Author: {AuthorPost}",
-						newPost.Id, newPost.TitlePost, newPost.AauthorPost);
+						newPost.Id, newPost.TitlePost, newPost.AuthorPost);
 				}
 
 				return newPost;
