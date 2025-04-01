@@ -10,141 +10,170 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     public class NewsChannelRepository : INewsChannelRepository
     {
         private readonly AppDbContext _appDbContext;
+        private readonly ILogger<NewsChannelRepository> _logger;
 
-		public NewsChannelRepository(AppDbContext appDbContext)
+		public NewsChannelRepository(AppDbContext appDbContext, ILogger<NewsChannelRepository> logger)
+		{
+			_appDbContext = appDbContext;
+			_logger = logger;
+		}
+
+		public async Task<NewsChannel?> CreateNewNewsChannel(NewsChannelDto newsChannelDto)
         {
-            _appDbContext = appDbContext;
-        }
+			try
+			{
+				_logger.LogInformation("Попытка создания нового новостного канала с названием {Name}", newsChannelDto.Name);
 
-        public async Task<NewsChannel?> CreateNewNewsChannel(NewsChannelDto newsChannelDto)
-        {
-            try
-            {
-                if(string.IsNullOrEmpty(newsChannelDto.Name))
-                {
-                    throw new ArgumentNullException("Значение Name не может быть null");
-                }
+				if (string.IsNullOrEmpty(newsChannelDto.Name))
+				{
+					_logger.LogError("Неверное значение параметра Name: {Name}. Значение не может быть null или пустым.", newsChannelDto.Name);
+					throw new ArgumentNullException("Значение Name не может быть null");
+				}
 
-                //Есть ли уже данная запись в БД
-                var existedNewsChannel = await GetNewsChannelByName(newsChannelDto.Name);
+				var existedNewsChannel = await GetNewsChannelByName(newsChannelDto.Name);
 
-                //Выводим ее 
-                if(existedNewsChannel is not null)
-                {
-                    return existedNewsChannel;
-                }
+				if (existedNewsChannel is not null)
+				{
+					_logger.LogWarning("Новостной канал с названием {Name} уже существует. Возвращаем существующий канал.", newsChannelDto.Name);
+					return existedNewsChannel;
+				}
 
-                //Тогда создаем новый канал 
-                var newNewsChannel = new NewsChannel
-                {
-                    Name = newsChannelDto.Name,
-                    Description = newsChannelDto.Description,
-                    DateCreated = newsChannelDto.DateCreated,
-                };
+				var newNewsChannel = new NewsChannel
+				{
+					Name = newsChannelDto.Name,
+					Description = newsChannelDto.Description,
+					DateCreated = newsChannelDto.DateCreated,
+				};
 
-                await _appDbContext.AddAsync(newNewsChannel);
-                await _appDbContext.SaveChangesAsync();
+				await _appDbContext.AddAsync(newNewsChannel);
+				await _appDbContext.SaveChangesAsync();
 
-                return newNewsChannel;
-            }
-            catch (Exception ex)
-            {
-				Console.WriteLine($"Создать не получилось - {ex.Message}");
-                return null;
-            }
-        }
+				_logger.LogInformation("Новостной канал с названием {Name} успешно создан", newsChannelDto.Name);
+				return newNewsChannel;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при создании новостного канала с названием {Name}", newsChannelDto.Name);
+				return null;
+			}
+		}
 
         public async Task<List<NewsChannel>> GetAllNewsChannels()
         {
-            try
-            {
-                var channels = await _appDbContext.NewsChannels.ToListAsync();
+			try
+			{
+				_logger.LogInformation("Попытка получения всех новостных каналов");
+
+				var channels = await _appDbContext.NewsChannels.ToListAsync();
+
+				if (!channels.Any())
+				{
+					_logger.LogWarning("Новостные каналы в базе данных отсутствуют");
+				}
+				else
+				{
+					_logger.LogInformation("Успешно получено {Count} новостных каналов", channels.Count);
+				}
 
 				return channels;
 			}
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при получении всех новостных каналов");
+				throw;
+			}
+		}
 
         public async Task<NewsChannel?> GetNewsChannelById(int newsChannelId)
         {
-            try
-            {
-                //проверяем входной параметр
-                if (newsChannelId <= 0)
-                {
-                    throw new ArgumentNullException("Параметр newsChannelId должен быть > 0");
-                }
+			try
+			{
+				_logger.LogInformation("Попытка получения новостного канала по ID {Id}", newsChannelId);
 
-                var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
+				if (newsChannelId <= 0)
+				{
+					_logger.LogError("Неверное значение параметра newsChannelId: {Id}. Значение должно быть больше 0.", newsChannelId);
+					throw new ArgumentNullException("Параметр newsChannelId должен быть > 0");
+				}
 
-                if (newsChannel is null)
-                {
-					Console.WriteLine($"Новостной канал с id = {newsChannelId} не найден.");
-                    return null;
-                }
+				var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
 
-                return newsChannel;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
+				if (newsChannel is null)
+				{
+					_logger.LogWarning("Новостной канал с ID {Id} не найден", newsChannelId);
+					return null;
+				}
+
+				_logger.LogInformation("Новостной канал с ID {Id} успешно найден. Название: {Name}", newsChannelId, newsChannel.Name);
+				return newsChannel;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при получении новостного канала по ID {Id}", newsChannelId);
+				throw;
+			}
+		}
 
         public async Task<NewsChannel?> GetNewsChannelByName(string newsChannelName)
         {
-            try
-            {
-                if (string.IsNullOrEmpty(newsChannelName))
-                {
-                    Console.WriteLine($"Некорректное значение newsChannelName для поиска новостного канала: {newsChannelName}. Ожидается не null.");
-                    throw new ArgumentNullException("Значение newsChannelName не может быть null");
-                }
+			try
+			{
+				_logger.LogInformation("Попытка поиска новостного канала по названию {Name}", newsChannelName);
 
-                var newsChannel = await _appDbContext.NewsChannels.SingleOrDefaultAsync(el => el.Name == newsChannelName);
-
-                //Если не нашли
-                if (newsChannel is null)
-                {
-                    Console.WriteLine($"Новостного канала с названием = {newsChannelName} не найдено.");
-                    return null;
-                }
-
-                return newsChannel;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
-
-        //Для поиска совпадающих по названию частично 
-        public async Task<List<NewsChannel>> GetNewsChannelsByPartName(string newsChannelName)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(newsChannelName))
-                {
+				if (string.IsNullOrEmpty(newsChannelName))
+				{
+					_logger.LogError("Неверное значение параметра newsChannelName: {Name}. Значение не может быть null или пустым.", newsChannelName);
 					throw new ArgumentNullException("Значение newsChannelName не может быть null");
 				}
 
-                var newsChannel = await _appDbContext.NewsChannels.Where(el => el.Name.Contains(newsChannelName)).ToListAsync();
+				var newsChannel = await _appDbContext.NewsChannels.SingleOrDefaultAsync(el => el.Name == newsChannelName);
 
-                //Если ничего не найдено
-                if (newsChannel is null)
-                {
-                    return null;
-                }
+				if (newsChannel is null)
+				{
+					_logger.LogWarning("Новостной канал с названием {Name} не найден", newsChannelName);
+					return null;
+				}
 
-                return newsChannel;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
+				_logger.LogInformation("Новостной канал с названием {Name} успешно найден. ID: {Id}", newsChannelName, newsChannel.Id);
+				return newsChannel;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при поиске новостного канала по названию {Name}", newsChannelName);
+				throw;
+			}
+		}
+
+        public async Task<List<NewsChannel>> GetNewsChannelsByPartName(string newsChannelName)
+        {
+			try
+			{
+				_logger.LogInformation("Попытка поиска новостных каналов по части названия {Name}", newsChannelName);
+
+				if (string.IsNullOrEmpty(newsChannelName))
+				{
+					_logger.LogError("Неверное значение параметра newsChannelName: {Name}. Значение не может быть null или пустым.", newsChannelName);
+					throw new ArgumentNullException("Значение newsChannelName не может быть null");
+				}
+
+				var newsChannels = await _appDbContext.NewsChannels.Where(el => el.Name.Contains(newsChannelName)).ToListAsync();
+
+				if (!newsChannels.Any())
+				{
+					_logger.LogWarning("Новостные каналы, содержащие часть названия {Name}, не найдены", newsChannelName);
+				}
+				else
+				{
+					_logger.LogInformation("Найдено {Count} новостных каналов, содержащих часть названия {Name}", newsChannels.Count, newsChannelName);
+				}
+
+				return newsChannels;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при поиске новостных каналов по части названия {Name}", newsChannelName);
+				throw;
+			}
+		}
     }
 }

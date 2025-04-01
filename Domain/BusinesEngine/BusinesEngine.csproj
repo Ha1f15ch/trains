@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

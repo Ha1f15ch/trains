@@ -2,26 +2,45 @@
 using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace BusinesEngine.MediatorInstruction.Handlers.BookHandlers
 {
-	public class GetAllBooksHandler : IRequestHandler<GetAllBooksQuery, List<Book?>>
+	public class GetAllBooksHandler : IRequestHandler<GetAllBooksQuery, List<Book>>
 	{
 		private readonly IBookRepository _bookRepository;
+		private readonly ILogger<GetAllBooksHandler> _logger;
 
-		public GetAllBooksHandler(IBookRepository bookRepository)
+		public GetAllBooksHandler(IBookRepository bookRepository, ILogger<GetAllBooksHandler> logger)
 		{
 			_bookRepository = bookRepository;
+			_logger = logger;
 		}
 
-		public async Task<List<Book?>> Handle(GetAllBooksQuery request, CancellationToken cancellationToken)
+		public async Task<List<Book>> Handle(GetAllBooksQuery request, CancellationToken cancellationToken)
 		{
-			return await _bookRepository.GetAllBooks();
+			try
+			{
+				_logger.LogInformation("Попытка получения всех книг");
+
+				var books = await _bookRepository.GetAllBooks();
+
+				if (!books.Any())
+				{
+					_logger.LogWarning("Книги в базе данных отсутствуют");
+				}
+				else
+				{
+					_logger.LogInformation("Успешно получено {Count} книг", books.Count);
+				}
+
+				return books;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при получении всех книг");
+				throw;
+			}
 		}
 	}
 }

@@ -8,48 +8,46 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     public class NewsChannelsPostsRepository : INewsChannelsPostsRepository
     {
         private readonly AppDbContext _appDbContext;
+		private readonly ILogger<NewsChannelsPostsRepository> _logger;
 
-        public NewsChannelsPostsRepository(AppDbContext appDbContext)
+        public NewsChannelsPostsRepository(AppDbContext appDbContext, ILogger<NewsChannelsPostsRepository> logger)
         {
             _appDbContext = appDbContext;
+			_logger = logger;
         }
 
-        //создаем новый пост из новостного канала 
         public async Task<NewsChannelsPosts?> CreateNewNewsChannelsPost(int newChannelId, string titlePost, string bodyPost, string? footerPost, string authorPost, string? sourceImage)
         {
-            try
-            {
-                //Проверяем на наличие записи в БД по id канала
+			try
+			{
+				_logger.LogInformation("Попытка создания нового поста для новостного канала с ID {NewsChannelId}", newChannelId);
+
 				var newsChannel = await _appDbContext.NewsChannels.FindAsync(newChannelId);
 
 				if (newsChannel is null)
 				{
-					Console.WriteLine($"По заданному id канала, найти такой канал не удалось");
+					_logger.LogWarning("Новостной канал с ID {NewsChannelId} не найден", newChannelId);
 					return null;
 				}
 
-				//Проверяем на null authorPost
 				if (string.IsNullOrEmpty(authorPost))
 				{
-					Console.WriteLine($"Параметр authorPost не может быть null");
+					_logger.LogError("Неверное значение параметра authorPost: {AuthorPost}. Значение не может быть null или пустым.", authorPost);
 					return null;
 				}
 
-				//Проверяем на null bodyPost
 				if (string.IsNullOrEmpty(bodyPost))
-                {
-					Console.WriteLine($"Параметр bodyPost не может быть null");
+				{
+					_logger.LogError("Неверное значение параметра bodyPost: {BodyPost}. Значение не может быть null или пустым.", bodyPost);
 					return null;
 				}
 
-				//Проверяем на null titlePost
 				if (string.IsNullOrEmpty(titlePost))
-                {
-					Console.WriteLine($"Параметр titlePost не может быть null");
+				{
+					_logger.LogError("Неверное значение параметра titlePost: {TitlePost}. Значение не может быть null или пустым.", titlePost);
 					return null;
 				}
 
-				//Создаем экземпляр новой записи для сохранения ее в контексте 
 				var newPost = new NewsChannelsPosts
 				{
 					NewsChannelId = newsChannel.Id,
@@ -64,98 +62,112 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 				await _appDbContext.NewsChannelsPosts.AddAsync(newPost);
 				await _appDbContext.SaveChangesAsync();
 
-				Console.WriteLine($"Запись новостного сообщения была создана. newPost = {nameof(newPost)}. Где newPost.NewsChannelId = {newPost.NewsChannelId}\nnewPost.TitlePost = {newPost.TitlePost}\nnewPost.BodyPost = {newPost.BodyPost}\nnewPost.FooterPost = {newPost.FooterPost}\nnewPost.AuthorPost = {newPost.AuthorPost}\nnewPost.SurceImage = {newPost.SurceImage}\nnewPost.CreatedDate = {newPost.CreatedDate}");
+				_logger.LogInformation("Пост успешно создан. ID новостного канала: {NewsChannelId}, Заголовок: {TitlePost}, Автор: {AuthorPost}",
+					newPost.NewsChannelId, newPost.TitlePost, newPost.AuthorPost);
 
 				return newPost;
 			}
-            catch( Exception ex )
-            {
-				Console.WriteLine($"При выполнении метода {nameof(CreateNewNewsChannelsPost)} возникла ошибка: {ex.Message}");
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при создании нового поста для новостного канала с ID {NewsChannelId}", newChannelId);
 				return null;
 			}
-        }
+		}
 
         public async Task<List<NewsChannelsPosts>> GetAllPosts()
         {
 			try
 			{
+				_logger.LogInformation("Попытка получения всех постов");
+
 				var posts = await _appDbContext.NewsChannelsPosts.ToListAsync();
+
+				if (!posts.Any())
+				{
+					_logger.LogWarning("Посты в базе данных отсутствуют");
+				}
+				else
+				{
+					_logger.LogInformation("Успешно получено {Count} постов", posts.Count);
+				}
+
 				return posts;
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"При выполнении метода {nameof(GetAllPosts)} возникла ошибка: {ex.Message}");
+				_logger.LogError(ex, "Ошибка при получении всех постов");
 				return new List<NewsChannelsPosts>();
 			}
 		}
 
         public async Task<List<NewsChannelsPosts>> GetAllPostsByNewsChannelId(int newsChannelId)
         {
-            try
-            {
-				Console.WriteLine($"Поиск по id новостного канала");
-                var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
+			try
+			{
+				_logger.LogInformation("Попытка получения постов для новостного канала с ID {NewsChannelId}", newsChannelId);
 
-				//Проверка на null
-                if(newsChannel is null)
-                {
-                    Console.WriteLine($"Передано некорректное значение id новостного канала - {newsChannelId} - {nameof(newsChannelId)}. Не найден новостной канал по значению id - {newsChannelId}");
+				var newsChannel = await _appDbContext.NewsChannels.FindAsync(newsChannelId);
+
+				if (newsChannel is null)
+				{
+					_logger.LogWarning("Новостной канал с ID {NewsChannelId} не найден", newsChannelId);
 					return new List<NewsChannelsPosts>();
 				}
 
-                Console.WriteLine($"Поиск постов для новостного канала - {newsChannel} - {nameof(newsChannel)}");
-				
 				var listPosts = await _appDbContext.NewsChannelsPosts
 					.Where(el => el.NewsChannelId == newsChannelId)
 					.ToListAsync();
 
-				//Проверяем, есть ли посты
 				if (!listPosts.Any())
 				{
-					Console.WriteLine($"Постов от новостного канала с id = {newsChannelId} не найдено.");
-					return new List<NewsChannelsPosts>();
+					_logger.LogWarning("Посты для новостного канала с ID {NewsChannelId} не найдены", newsChannelId);
+				}
+				else
+				{
+					_logger.LogInformation("Найдено {Count} постов для новостного канала с ID {NewsChannelId}", listPosts.Count, newsChannelId);
 				}
 
 				return listPosts;
 			}
-            catch(Exception ex)
-            {
-                Console.WriteLine($"Возникла ошибка при поиске постов для новостного канала id = {newsChannelId} - {ex.Message}");
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при получении постов для новостного канала с ID {NewsChannelId}", newsChannelId);
 				return new List<NewsChannelsPosts>();
 			}
-        }
+		}
 
         public async Task<List<NewsChannelsPosts>> GetAllPostsByPartTitle(string titlePost)
         {
 			try
-            {
+			{
+				_logger.LogInformation("Попытка поиска постов по части заголовка {TitlePost}", titlePost);
+
 				if (string.IsNullOrEmpty(titlePost))
 				{
-					Console.WriteLine($"Некорректное значение titlePost поста новостного канала: {titlePost}. Ожидается не null.");
+					_logger.LogError("Неверное значение параметра titlePost: {TitlePost}. Значение не может быть null или пустым.", titlePost);
 					return new List<NewsChannelsPosts>();
 				}
 
-				Console.WriteLine($"Поиск постов по заголовку = {titlePost}, вызван метод {nameof(GetAllPostsByPartTitle)}");
 				var listPostByPartTitlePost = await _appDbContext.NewsChannelsPosts
 					.Where(el => el.TitlePost.ToLower().Contains(titlePost.ToLower()))
 					.ToListAsync();
 
 				if (!listPostByPartTitlePost.Any())
-                {
-                    Console.WriteLine($"Не найдено совпадений с заданной частью заголовка - {titlePost}");
-					return new List<NewsChannelsPosts>();
+				{
+					_logger.LogWarning("Посты с частью заголовка {TitlePost} не найдены", titlePost);
 				}
-
-				//Если нашли
-				Console.WriteLine($"Найдено {listPostByPartTitlePost.Count} постов с частью заголовка '{titlePost}'.");
+				else
+				{
+					_logger.LogInformation("Найдено {Count} постов с частью заголовка {TitlePost}", listPostByPartTitlePost.Count, titlePost);
+				}
 
 				return listPostByPartTitlePost;
 			}
-            catch (Exception ex)
-            {
-                Console.WriteLine($"При выполнении метода {nameof(GetAllPostsByPartTitle)} возникла ошибка: {ex.Message}");
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при поиске постов по части заголовка {TitlePost}", titlePost);
 				return new List<NewsChannelsPosts>();
 			}
-        }
+		}
     }
 }

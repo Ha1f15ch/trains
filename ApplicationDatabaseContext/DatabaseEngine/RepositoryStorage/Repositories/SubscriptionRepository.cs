@@ -10,34 +10,37 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     public class SubscriptionRepository : ISubscriptionRepository
     {
         private readonly AppDbContext _appDbContext;
+        private readonly ILogger<SubscriptionRepository> _logger;
 
-        public SubscriptionRepository(AppDbContext appDbContext)
+        public SubscriptionRepository(AppDbContext appDbContext, ILogger<SubscriptionRepository> logger)
         {
             _appDbContext = appDbContext;
+            _logger = logger;
         }
 
-        //Поиск подписок пользователя по userId
         public async Task<List<Subscription>> GetUserSubscriptions(int userId)
         {
 			try
 			{
-				// Получаем подписки пользователя за один запрос
+				_logger.LogInformation("Попытка получения подписок для пользователя ID {UserId}", userId);
+
 				var userSubscriptions = await _appDbContext.Subscriptions
 					.Where(sub => sub.UserId == userId)
 					.ToListAsync();
 
-				// Если пользователь не существует, подписок не будет
 				if (!userSubscriptions.Any())
 				{
+					_logger.LogWarning("Подписки для пользователя ID {UserId} не найдены", userId);
 					return new List<Subscription>();
 				}
 
+				_logger.LogInformation("Успешно получено {Count} подписок для пользователя ID {UserId}", userSubscriptions.Count, userId);
 				return userSubscriptions;
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Не удалось получить подписки для пользователя ID {userId}.", ex);
-                return new List<Subscription>();
+				_logger.LogError(ex, "Ошибка при получении подписок для пользователя ID {UserId}", userId);
+				return new List<Subscription>();
 			}
 		}
 
@@ -45,39 +48,44 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
         {
             try
             {
-				// Валидация параметра userId
-				if (userId <= 0)
-                {
-                    throw new ArgumentException("Параметр userId не может быть меньше или равно 0");
-                }
+				_logger.LogInformation("Попытка подписки пользователя ID {UserId} на книгу ID {BookId}", userId, bookId);
 
-				// Валидация параметра bookId
+
+				if (userId <= 0)
+				{
+					_logger.LogError("Неверное значение параметра userId: {UserId}. Значение должно быть больше 0.", userId);
+					throw new ArgumentException("Параметр userId не может быть меньше или равно 0");
+				}
+
 				if (bookId <= 0)
 				{
+					_logger.LogError("Неверное значение параметра bookId: {BookId}. Значение должно быть больше 0.", bookId);
 					throw new ArgumentException("Параметр bookId не может быть меньше или равно 0");
 				}
 
-                //Проверка, есть ли в контексте для данных id записи
 				var subscriber = await _appDbContext.Users.FindAsync(userId);
                 var book = await _appDbContext.Books.FindAsync(bookId);
 
                 if (subscriber is null)
-                {
-                    throw new NullReferenceException($"Запись по userId не найдена. subscriber = null");
-                }
+				{
+					_logger.LogError("Пользователь с ID {UserId} не найден в базе данных", userId);
+					throw new NullReferenceException($"Запись по userId не найдена. subscriber = null");
+				}
 
-                if(book is null)
-                {
+				if (book is null)
+				{
+					_logger.LogError("Книга с ID {BookId} не найдена в базе данных", bookId);
 					throw new NullReferenceException($"Запись по bookId не найдена. book = null");
 				}
 
 				var existingSubscription = subscriber.Subscriptions.SingleOrDefault(subs => subs.BookId == book.Id);
 
-                //Если его нет
                 if(existingSubscription is null)
                 {
-                    //Создание экземпляра подписки для сохранения в контексте
-                    var newSubscription = new Subscription
+					_logger.LogInformation("Создание новой подписки для пользователя ID {UserId} на книгу ID {BookId}", userId, bookId);
+
+
+					var newSubscription = new Subscription
                     {
                         UserId = userId,
                         BookId = bookId,
@@ -87,23 +95,19 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                     await _appDbContext.AddAsync(newSubscription);
                     await _appDbContext.SaveChangesAsync();
 
-                    //Создание специального типа данных для передачи в класс обработчик, ожидающие этот тип данных
-                    var subscriptionDto = new SubscriptionDto
-                    {
-                        UserId = newSubscription.UserId,
-                        BookId = newSubscription.BookId,
-                        SubscriptionDate = newSubscription.SubscriptionDate
-                    };
+					_logger.LogInformation("Подписка успешно создана для пользователя ID {UserId} на книгу ID {BookId}", userId, bookId);
 
-                    return newSubscription;
-                }
+					return newSubscription;
+				}
 
+				_logger.LogInformation("Подписка уже существует для пользователя ID {UserId} на книгу ID {BookId}", userId, bookId);
 				return existingSubscription;
-            }
+			}
             catch(Exception ex)
             {
-                throw;
-            }
+				_logger.LogError(ex, "Ошибка при подписке пользователя ID {UserId} на книгу ID {BookId}", userId, bookId);
+				throw;
+			}
         }
     }
 }

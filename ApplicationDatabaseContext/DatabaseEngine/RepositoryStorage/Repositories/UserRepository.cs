@@ -4,17 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Dapper;
 using System.Data;
+using Microsoft.Extensions.Logging;
 
 namespace DatabaseEngine.RepositoryStorage.Repositories
 {
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _appDbContext;
+        private readonly ILogger<UserRepository> _logger;
 
-        public UserRepository(
-            AppDbContext appDbContext)
+        public UserRepository(AppDbContext appDbContext, ILogger<UserRepository> logger)
         {
             _appDbContext = appDbContext;
+            _logger = logger;
         }
 
         // использовалась параметризированная хранимая процедура, написанная в pg admin 4
@@ -33,12 +35,17 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
 
             try
             {
+                _logger.LogInformation($"Выполняем хранимую процедуру - insertuserdata");
+
                 await _appDbContext.Database.ExecuteSqlRawAsync("CALL insertuserdata(@value_Name, @value_Email, @value_Password, @value_IsActive, @value_DCreate, @value_DUpdate, @value_DDelete)", parameters);
 
                 var newUser = await _appDbContext.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
 
+                _logger.LogInformation($"New user: {newUser.Id}");
+
                 if (newUser == null)
                 {
+                    _logger.LogWarning($"Пользователя не удалось найти.");
                     throw new NullReferenceException("Не найдено значение в таблице User !!!"); 
                 }
 
@@ -46,29 +53,35 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch(Exception ex)
             {
+                _logger.LogError(ex, $"User is not created. Error - {ex.Message}");
                 throw;
             }
         }
 
         // использовался Dapper
-        public async Task<List<User?>> GetAllUsers()
+        public async Task<List<User>> GetAllUsers()
         {
             try
             {
                 const string sqlQuery = "SELECT * FROM dbo.\"User\"";
 
-                //Создаем соединение с БД
+                _logger.LogInformation($"Creating query to database{sqlQuery}");
+
                 using var connection = _appDbContext.Database.GetDbConnection();
 
-                //Открываем соединение
                 await connection.OpenAsync();
+                
+                _logger.LogInformation($"Connection is opened");
 
                 var users = await connection.QueryAsync<User?>(sqlQuery);
-                
+
+                _logger.LogInformation($"Result is {users.ToList().Count} users");
+
                 return users.ToList();
             }
             catch (Exception ex)
             {
+                _logger.LogWarning(ex, $"Возникла ошибка при получении списка пользователей - {ex.Message}");
                 throw;
             }
         }
@@ -80,16 +93,23 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             {
                 const string sqlQuery = "SELECT * FROM dbo.\"User\" WHERE \"Id\" = @Id";
 
-				//Создаем соединение с БД
+                _logger.LogInformation($"Create a query to database - {userId}. Will be use Dapper to get the result.");
+				
 				using var connection = _appDbContext.Database.GetDbConnection();
 
-				//Открываем соединение
+                _logger.LogInformation($"Connect to database is created");
+				
 				await connection.OpenAsync();
+
+                _logger.LogInformation($"Connection to database is opened");
 
 				var userById = await connection.QuerySingleOrDefaultAsync<User?>(sqlQuery, new { Id = userId });
 
+                _logger.LogInformation($"User is founded by userId = {userId}. UserName = {userById?.Name}");
+
                 if (userById == null)
                 {
+                    _logger.LogWarning($"User is not founded . . . ");
                     return null;
                 }
 
@@ -97,13 +117,18 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, $"An error occurred while processing the request to search for a user by userId = {userId}. Error = {ex.Message}");
                 throw;
             }
         }
 
 		public async Task<List<string>> GetAllUsersEmail()
         {
+            _logger.LogInformation("Query to get all user emails");
+
             var usersEmail = await _appDbContext.Users.Select(s => s.Email).ToListAsync();
+
+            _logger.LogInformation($"{usersEmail.Count} user email adresses received");
 
             return usersEmail;
 		}

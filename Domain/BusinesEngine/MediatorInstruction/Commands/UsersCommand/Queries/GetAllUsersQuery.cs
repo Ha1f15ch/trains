@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BusinesEngine.MediatorInstruction.Commands.UsersCommand.Queries
 {
-	public class GetAllUsersQuery : IRequest<List<User?>>
+	public class GetAllUsersQuery : IRequest<List<User>>
 	{
 	}
 }

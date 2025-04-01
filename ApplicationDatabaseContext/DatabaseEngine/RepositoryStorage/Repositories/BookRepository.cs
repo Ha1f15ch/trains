@@ -9,37 +9,41 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
     public class BookRepository : IBookRepository
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<BookRepository> _logger;
 
+		public BookRepository(AppDbContext context, ILogger<BookRepository> logger)
+		{
+			_context = context;
+			_logger = logger;
+		}
 
-		public BookRepository(AppDbContext context)
+		public async Task<Book?> CreateNewBook(string title, bool isActive, string? description, string? author, int? countList, string? createdAt, DateTime updateDate)
         {
-            _context = context;
-        }
-
-        public async Task<Book?> CreateNewBook(string title, bool isActive, string? description, string? author, int? countList, string? createdAt, DateTime updateDate)
-        {//Возможно после использовать autoMapper
             try
             {
-                if (string.IsNullOrEmpty(title))
-                {
-                    throw new ArgumentNullException($"Параметр title не может быть null");
-                }
+				_logger.LogInformation("Попытка создания новой книги с названием {Title}", title);
 
-                if (updateDate == default)
-                {
-                    throw new ArgumentNullException($"Параметр updateDate должен быть указан");
-                }
+				if (string.IsNullOrEmpty(title))
+				{
+					_logger.LogError("Неверное значение параметра title: {Title}. Значение не может быть null или пустым.", title);
+					throw new ArgumentNullException($"Параметр title не может быть null");
+				}
 
-                //проверить, есть ли уже такие записи по title
-                var existedBook = await _context.Books.FirstOrDefaultAsync(x => x.Title == title);
+				if (updateDate == default)
+				{
+					_logger.LogError("Неверное значение параметра updateDate: {UpdateDate}. Дата обновления должна быть указана.", updateDate);
+					throw new ArgumentNullException($"Параметр updateDate должен быть указан");
+				}
 
-                if (existedBook is not null) 
-                {
-                    return existedBook;
-                }
+				var existedBook = await _context.Books.FirstOrDefaultAsync(x => x.Title == title);
 
-                //Создаем экземпляр класса книги для сохранения в контексте
-                var newBook = new Book
+                if (existedBook is not null)
+				{
+					_logger.LogWarning("Книга с названием {Title} уже существует. Возвращаем существующую книгу.", title);
+					return existedBook;
+				}
+
+				var newBook = new Book
                 {
                     Title = title,
                     IsActive = isActive,
@@ -53,76 +57,102 @@ namespace DatabaseEngine.RepositoryStorage.Repositories
                 await _context.Books.AddAsync(newBook);
                 await _context.SaveChangesAsync();
 
-                return newBook;
-            }
+				_logger.LogInformation("Книга с названием {Title} успешно создана", title);
+				return newBook;
+			}
             catch (Exception ex)
             {
-                throw;
-            }
+				_logger.LogError(ex, "Ошибка при создании книги с названием {Title}", title);
+				throw;
+			}
         }
 
-        public async Task<List<Book?>> GetAllBooks()
+        public async Task<List<Book>> GetAllBooks()
         {
-            try
-            {
-                var books = await _context.Books.ToListAsync();
+			try
+			{
+				_logger.LogInformation("Попытка получения всех книг");
+
+				var books = await _context.Books.ToListAsync();
+
+				if (!books.Any())
+				{
+					_logger.LogWarning("Книги в базе данных отсутствуют");
+				}
+				else
+				{
+					_logger.LogInformation("Успешно получено {Count} книг", books.Count);
+				}
 
 				return books;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при получении всех книг");
+				throw;
+			}
+		}
 
         public async Task<Book?> GetBookById(int id)
         {
-            try
-            {
-                //Валидация входного параметра
-                if(id <= 0)
-                {
-                    throw new ArgumentException($"Для поиска книги id должен быть > 0");
-                }
+			try
+			{
+				_logger.LogInformation("Попытка получения книги по ID {Id}", id);
 
-                //Выполняем поиск
-                var book = await _context.Books.FindAsync(id);
+				if (id <= 0)
+				{
+					_logger.LogError("Неверное значение параметра id: {Id}. Значение должно быть больше 0.", id);
+					throw new ArgumentException($"Для поиска книги id должен быть > 0");
+				}
 
-                if(book is null)
-                {
-					Console.WriteLine($"Книга с id = {id} не найдена.\n id = {book.Id}\n title = {book.Title}");
-                }
+				var book = await _context.Books.FindAsync(id);
 
-                return book;
-            }
-            catch(Exception ex)
-            {
-                throw;
-            }
-        }
+				if (book is null)
+				{
+					_logger.LogWarning("Книга с ID {Id} не найдена", id);
+					return null;
+				}
 
-        public async Task<List<Book?>> GetBooksByName(string name)
+				_logger.LogInformation("Книга с ID {Id} успешно найдена. Название: {Title}", id, book.Title);
+				return book;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при получении книги по ID {Id}", id);
+				throw;
+			}
+		}
+
+        public async Task<List<Book>> GetBooksByName(string name)
         {
-            try
-            {
-                if (string.IsNullOrEmpty(name))
-                {
-                    throw new NullReferenceException($"Параметр name не может быть равен null");
-                }
+			try
+			{
+				_logger.LogInformation("Попытка поиска книг по названию {Name}", name);
 
-                var book = await _context.Books.Where(el => el.Title.Contains(name)).ToListAsync();
+				if (string.IsNullOrEmpty(name))
+				{
+					_logger.LogError("Неверное значение параметра name: {Name}. Значение не может быть null или пустым.", name);
+					throw new NullReferenceException($"Параметр name не может быть равен null");
+				}
 
-                if (book is null)
-                {
-					Console.WriteLine($"Книга с таким названием = {name} не найдена.");
-                }
+				var books = await _context.Books.Where(el => el.Title.Contains(name)).ToListAsync();
 
-                return book;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
+				if (!books.Any())
+				{
+					_logger.LogWarning("Книги с названием {Name} не найдены", name);
+				}
+				else
+				{
+					_logger.LogInformation("Найдено {Count} книг с названием {Name}", books.Count, name);
+				}
+
+				return books;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при поиске книг по названию {Name}", name);
+				throw;
+			}
+		}
     }
 }

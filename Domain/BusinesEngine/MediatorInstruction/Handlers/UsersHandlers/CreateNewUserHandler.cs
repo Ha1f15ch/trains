@@ -1,13 +1,8 @@
 ﻿using BusinesEngine.MediatorInstruction.Commands.UsersCommand;
 using BusinesEngine.Services;
-using DatabaseEngine.Models;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace BusinesEngine.MediatorInstruction.Handlers.UsersHandlers
 {
@@ -15,24 +10,52 @@ namespace BusinesEngine.MediatorInstruction.Handlers.UsersHandlers
 	{
 		private readonly IUserRepository _userRepository;
 		private readonly JsonStringHandlerService _jsonStringHandlerService;
+		private readonly ILogger<CreateNewUserHandler> _logger;
 
-		public CreateNewUserHandler(IUserRepository userRepository, JsonStringHandlerService jsonStringHandlerService)
+		public CreateNewUserHandler(IUserRepository userRepository, JsonStringHandlerService jsonStringHandlerService, ILogger<CreateNewUserHandler> logger)
 		{
 			_userRepository = userRepository;
 			_jsonStringHandlerService = jsonStringHandlerService;
+			_logger = logger;
 		}
 
 		public async Task<string> Handle(CreateNewUserCommand request, CancellationToken cancellationToken)
 		{
-			var newUser = await _userRepository.CreateNewUser(request.Name,
-				request.Email,
-				request.Password,
-				request.IsActive,
-				request.DateCreate,
-				request.DateUpdate,
-				request.DateDelete);
+			try
+			{
+				_logger.LogInformation("Попытка создания нового пользователя. Параметры: Name = {Name}, Email = {Email}, IsActive = {IsActive}",
+					request.Name, request.Email, request.IsActive);
 
-			return await _jsonStringHandlerService.SerializeSingle(newUser);
+				var newUser = await _userRepository.CreateNewUser(
+					request.Name,
+					request.Email,
+					request.Password,
+					request.IsActive,
+					request.DateCreate,
+					request.DateUpdate,
+					request.DateDelete
+				);
+
+				if (newUser is null)
+				{
+					_logger.LogWarning("Создание пользователя не удалось. Параметры: Name = {Name}, Email = {Email}", request.Name, request.Email);
+					return null;
+				}
+
+				_logger.LogInformation("Пользователь успешно создан. ID: {UserId}, Name: {Name}, Email: {Email}", newUser.Id, newUser.Name, newUser.Email);
+
+				var serializedResult = await _jsonStringHandlerService.SerializeSingle(newUser);
+
+				_logger.LogInformation("Сериализация данных пользователя завершена");
+
+				return serializedResult;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Ошибка при создании пользователя. Параметры: Name = {Name}, Email = {Email}, IsActive = {IsActive}",
+					request.Name, request.Email, request.IsActive);
+				throw;
+			}
 		}
 	}
 }
