@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTOModels", "..\Shared\DTOM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "..\Shared\Common\Common.csproj", "{D6DC45D3-1905-4E0D-8361-C2855EA26E95}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integrations", "..\Shared\Integrations\Integrations.csproj", "{E918D042-0A0F-404B-B3D6-B2883AEE661C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{D6DC45D3-1905-4E0D-8361-C2855EA26E95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6DC45D3-1905-4E0D-8361-C2855EA26E95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6DC45D3-1905-4E0D-8361-C2855EA26E95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E918D042-0A0F-404B-B3D6-B2883AEE661C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E918D042-0A0F-404B-B3D6-B2883AEE661C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E918D042-0A0F-404B-B3D6-B2883AEE661C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E918D042-0A0F-404B-B3D6-B2883AEE661C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -10,6 +10,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using BusinesEngine.MediatorInstruction.Commands.UsersCommand;
 using Serilog;
+using RabbitMQ.Client.Core.DependencyInjection;
 
 
 var builder = WebApplication.CreateBuilder(args);
