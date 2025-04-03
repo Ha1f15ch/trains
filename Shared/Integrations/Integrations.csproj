@@ -12,8 +12,4 @@
     <PackageReference Include="RabbitMQ.Client.Core.DependencyInjection" Version="5.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\WebAppTrain\WebAppTrain.csproj" />
-  </ItemGroup>
-
 </Project>

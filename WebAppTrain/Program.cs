@@ -10,7 +10,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using BusinesEngine.MediatorInstruction.Commands.UsersCommand;
 using Serilog;
-using RabbitMQ.Client.Core.DependencyInjection;
+using Integrations.RabbitMqInfrastructure;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +40,13 @@ builder.Services.AddSingleton<IConnection>(provider =>
 		Port = int.Parse(builder.Configuration["RabbitMQ:Port"] ?? "5672")
 	};
     return Task.Run(() => factory.CreateConnectionAsync()).GetAwaiter().GetResult();
+});
+
+// регистрация и запуск RabbitMQ
+builder.Services.AddSingleton<RabbitMqService>(provider =>
+{
+	var connection = provider.GetRequiredService<IConnection>();
+	return new RabbitMqService(connection);
 });
 
 // Add services to the container.
@@ -110,7 +117,7 @@ builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
-if(app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(
@@ -120,15 +127,19 @@ if(app.Environment.IsDevelopment())
         });
 }
 
+// Явная инициализация RabbitMqService
+using (var scope = app.Services.CreateScope())
+{
+	var rabbitMqService = scope.ServiceProvider.GetRequiredService<RabbitMqService>();
+	await rabbitMqService.InitializeAsync();
+}
+
 // Configure the HTTP request pipeline.
 app.UseCors("AllowSpecificOrigin");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.UseHangfireDashboard(); // Включить поддержку hangfire дашбордов
-
-// Запускаем джобы
-/*JobExecution.StartJobs();*/
 
 // Проверка доступа БД перед запуском приложения
 using (var scope = app.Services.CreateScope())

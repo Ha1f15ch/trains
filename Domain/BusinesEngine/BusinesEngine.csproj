@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
     <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Shared\Integrations\Integrations.csproj" />
   </ItemGroup>
 
   <ItemGroup>

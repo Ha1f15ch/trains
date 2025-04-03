@@ -3,28 +3,52 @@ using BusinesEngine.Services;
 using DatabaseEngine.RepositoryStorage.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Integrations.RabbitMqInfrastructure;
+using System.Text.Json;
 
 namespace BusinesEngine.MediatorInstruction.Handlers.UsersHandlers
 {
-	public class CreateNewUserHandler : IRequestHandler<CreateNewUserCommand, string>
+	public class CreateNewUserHandler : IRequestHandler<CreateNewUserCommand, string?>
 	{
 		private readonly IUserRepository _userRepository;
 		private readonly JsonStringHandlerService _jsonStringHandlerService;
 		private readonly ILogger<CreateNewUserHandler> _logger;
+		private readonly RabbitMqService _rabbitMqService;
 
-		public CreateNewUserHandler(IUserRepository userRepository, JsonStringHandlerService jsonStringHandlerService, ILogger<CreateNewUserHandler> logger)
+		public CreateNewUserHandler(IUserRepository userRepository, JsonStringHandlerService jsonStringHandlerService, ILogger<CreateNewUserHandler> logger, RabbitMqService rabbitMqService)
 		{
 			_userRepository = userRepository;
 			_jsonStringHandlerService = jsonStringHandlerService;
 			_logger = logger;
+			_rabbitMqService = rabbitMqService;
 		}
 
-		public async Task<string> Handle(CreateNewUserCommand request, CancellationToken cancellationToken)
+		public async Task<string?> Handle(CreateNewUserCommand request, CancellationToken cancellationToken)
 		{
 			try
 			{
 				_logger.LogInformation("Попытка создания нового пользователя. Параметры: Name = {Name}, Email = {Email}, IsActive = {IsActive}",
 					request.Name, request.Email, request.IsActive);
+
+				// генерируем уникальный requestId для запроса в очереди
+				var requestR = Guid.NewGuid().ToString();
+
+				//Отправляем данные на валидацию через RabbitMQ
+				await _rabbitMqService.PublishValidationRequestAsync(requestR, new
+				{
+					request.Name,
+					request.Email,
+					request.Password
+				});
+
+				// получаем результат валидации 
+				var validationResult = await _rabbitMqService.GetValidationResultAsync(requestR);
+
+				if(!JsonSerializer.Deserialize<bool>(validationResult)) // Если валидация не пройдена
+				{
+					_logger.LogWarning($"Ошибка валидации. Параметры Name = {request.Name}, Email = {request.Email}, Password = {request.Password}");
+					return null;
+				}
 
 				var newUser = await _userRepository.CreateNewUser(
 					request.Name,

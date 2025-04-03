@@ -3,7 +3,7 @@ using DatabaseEngine.Models;
 
 namespace BusinesEngine.MediatorInstruction.Commands.UsersCommand
 {
-	public class CreateNewUserCommand : IRequest<string>
+	public class CreateNewUserCommand : IRequest<string?>
 	{
 		public string Name { get; set; }
 		public string Email { get; set; }

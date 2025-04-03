@@ -18,17 +18,50 @@ namespace Integrations.RabbitMqInfrastructure
 
 		public async Task InitializeAsync()
 		{
-			_channel = await _connection.CreateChannelAsync();
+			try
+			{
+				if (_connection == null || !_connection.IsOpen)
+				{
+					throw new InvalidOperationException("Соединение RabbitMQ не открыто.");
+				}
 
-			await _channel.QueueDeclareAsync(queue: "validation.requests", durable: false, exclusive: false, autoDelete: false, arguments: null);
-			await _channel.QueueDeclareAsync(queue: "validation.results", durable: false, exclusive: false, autoDelete: false, arguments: null);
+				_channel = await _connection.CreateChannelAsync();
+
+				await _channel.QueueDeclareAsync(queue: "validation.requests", durable: false, exclusive: false, autoDelete: false, arguments: null);
+				Console.WriteLine("Queue 'validation.requests' declared successfully.");
+
+				await _channel.QueueDeclareAsync(queue: "validation.results", durable: false, exclusive: false, autoDelete: false, arguments: null);
+				Console.WriteLine("Queue 'validation.results' declared successfully.");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Ошибка при инициализации канала в RabbitMQ: {ex.Message}");
+				throw;
+			}
 		}
 
 		public async Task PublishValidationRequestAsync(string requestId, object data) //Отправка данных на валидацию.
 		{
+			// Проверяем состояние канала
+			if (_channel == null || !_channel.IsOpen)
+			{
+				_channel = await _connection.CreateChannelAsync();
+				Console.WriteLine("Channel recreated successfully.");
+			}
+
+			if (_channel == null || !_channel.IsOpen || !_connection.IsOpen)
+			{
+				throw new InvalidOperationException("Channel or connection is not open.");
+			}
+			Console.WriteLine("Channel and connection are open.");
+
 			if (requestId == null)
 			{
 				throw new InvalidOperationException("Channel is not initialized.");
+			}
+			else
+			{
+				Console.WriteLine($"\nRequestId = {requestId}\n");
 			}
 
 			var message = new // Создаем объект сообщения.
@@ -37,15 +70,52 @@ namespace Integrations.RabbitMqInfrastructure
 				Data = data // Данные для валидации.
 			};
 
+			var jsonMessage = JsonSerializer.Serialize(message);
+			Console.WriteLine($"Serialized message: {jsonMessage}");
+
 			var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
-			await _channel.BasicPublishAsync<BasicProperties>( //Отправляем сообщение в очередь
-				exchange: "", //Используем пустой обменник (exchange).
-				routingKey: "validation.requests", //Ключ маршрутизации (имя очереди).
-				mandatory: false, //Сообщение может быть потеряно, если нет потребителей.
-				basicProperties: null, //Дополнительные свойства сообщения отсутствуют.
-				body: body //Тело сообщения (массив байтов).сериализованное 
-			);
+			Console.WriteLine($"\nbody = {body}\n");
+
+			try
+			{
+				// Проверяем существование очереди
+				try
+				{
+					await _channel.QueueDeclarePassiveAsync("validation.requests");
+					Console.WriteLine("Queue 'validation.requests' exists.");
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"Queue 'validation.requests' does not exist: {ex.Message}");
+					await _channel.QueueDeclareAsync(
+						queue: "validation.requests",
+						durable: false,
+						exclusive: false,
+						autoDelete: false,
+						arguments: null
+					);
+					Console.WriteLine("Queue 'validation.requests' declared successfully.");
+				}
+
+				Console.WriteLine("Before BasicPublishAsync");
+				var properties = new BasicProperties();
+				await _channel.BasicPublishAsync<BasicProperties>(
+					exchange: "",
+					routingKey: "validation.requests",
+					mandatory: false,
+					basicProperties: properties,
+					body: body
+				);
+				Console.WriteLine("After BasicPublishAsync");
+
+				Console.WriteLine("Message published successfully.");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error publishing message: {ex.Message}");
+				throw;
+			}
 		}
 
 		public async Task<string> GetValidationResultAsync(string requestId) //Получение результата валидации
