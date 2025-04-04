@@ -28,10 +28,10 @@ namespace Integrations.RabbitMqInfrastructure
 				_channel = await _connection.CreateChannelAsync();
 
 				await _channel.QueueDeclareAsync(queue: "validation.requests", durable: false, exclusive: false, autoDelete: false, arguments: null);
-				Console.WriteLine("Queue 'validation.requests' declared successfully.");
+				Console.WriteLine("Очередь 'validation.requests' успешно объявлена.");
 
 				await _channel.QueueDeclareAsync(queue: "validation.results", durable: false, exclusive: false, autoDelete: false, arguments: null);
-				Console.WriteLine("Queue 'validation.results' declared successfully.");
+				Console.WriteLine("Очередь 'validation.results' успешно объявлена.");
 			}
 			catch (Exception ex)
 			{
@@ -46,18 +46,18 @@ namespace Integrations.RabbitMqInfrastructure
 			if (_channel == null || !_channel.IsOpen)
 			{
 				_channel = await _connection.CreateChannelAsync();
-				Console.WriteLine("Channel recreated successfully.");
+				Console.WriteLine("Канал успешно переинициализирован.");
 			}
 
 			if (_channel == null || !_channel.IsOpen || !_connection.IsOpen)
 			{
-				throw new InvalidOperationException("Channel or connection is not open.");
+				throw new InvalidOperationException("Канал или соединение не открыты.");
 			}
-			Console.WriteLine("Channel and connection are open.");
+			Console.WriteLine("Канал и соединение открыты.");
 
 			if (requestId == null)
 			{
-				throw new InvalidOperationException("Channel is not initialized.");
+				throw new InvalidOperationException("Канал не инициализирован.");
 			}
 			else
 			{
@@ -71,11 +71,11 @@ namespace Integrations.RabbitMqInfrastructure
 			};
 
 			var jsonMessage = JsonSerializer.Serialize(message);
-			Console.WriteLine($"Serialized message: {jsonMessage}");
+			Console.WriteLine($"Сериализованное сообщение: {jsonMessage}");
 
 			var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
-			Console.WriteLine($"\nbody = {body}\n");
+			Console.WriteLine($"\nbody = {body.Count()}\n");
 
 			try
 			{
@@ -83,11 +83,11 @@ namespace Integrations.RabbitMqInfrastructure
 				try
 				{
 					await _channel.QueueDeclarePassiveAsync("validation.requests");
-					Console.WriteLine("Queue 'validation.requests' exists.");
+					Console.WriteLine("Очередь 'validation.requests' существует.");
 				}
 				catch (Exception ex)
 				{
-					Console.WriteLine($"Queue 'validation.requests' does not exist: {ex.Message}");
+					Console.WriteLine($"Очередь 'validation.requests' не существует: {ex.Message}");
 					await _channel.QueueDeclareAsync(
 						queue: "validation.requests",
 						durable: false,
@@ -95,10 +95,9 @@ namespace Integrations.RabbitMqInfrastructure
 						autoDelete: false,
 						arguments: null
 					);
-					Console.WriteLine("Queue 'validation.requests' declared successfully.");
+					Console.WriteLine("Очередь 'validation.requests' успешно объявлена.");
 				}
 
-				Console.WriteLine("Before BasicPublishAsync");
 				var properties = new BasicProperties();
 				await _channel.BasicPublishAsync<BasicProperties>(
 					exchange: "",
@@ -107,13 +106,12 @@ namespace Integrations.RabbitMqInfrastructure
 					basicProperties: properties,
 					body: body
 				);
-				Console.WriteLine("After BasicPublishAsync");
 
-				Console.WriteLine("Message published successfully.");
+				Console.WriteLine("Сообщение успешно опубликовалось в очереди.");
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error publishing message: {ex.Message}");
+				Console.WriteLine($"Ошибка публикации сообщения в очереди: {ex.Message}");
 				throw;
 			}
 		}
@@ -122,7 +120,7 @@ namespace Integrations.RabbitMqInfrastructure
 		{
 			if(_channel == null)
 			{
-				throw new InvalidOperationException("Channel is not initialized");
+				throw new InvalidOperationException("Канал не инициализирован");
 			}
 
 			var result = "";
