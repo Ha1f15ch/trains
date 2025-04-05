@@ -4,7 +4,8 @@ services:
   webapi:
     image: webapi-image
     build:
-      context: ../WebAppTrain
+      context: ../
+      dockerfile: WebAppTrain/Dockerfile
     ports:
       - "5000:80"
     environment:
@@ -19,6 +20,7 @@ services:
     image: validation-service-image
     build:
       context: ../IntegrationServices/ValidationService
+      dockerfile: Dockerfile
     environment:
       - RabbitMQ__HostName=rabbitmq
     depends_on:

@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Копируем файл проекта и восстанавливаем зависимости
-COPY ["ValidationService.csproj", "./"]
+COPY ValidationService.csproj .
 RUN dotnet restore "ValidationService.csproj"
 
 # Копируем остальные файлы проекта
