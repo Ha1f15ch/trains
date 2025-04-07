@@ -22,13 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
-    <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
-    <ProjectReference Include="..\..\Shared\Integrations\Integrations.csproj" />
+    <Folder Include="MediatorInstruction\Commands\NewsChannelSubscribersCommand\Queries\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="MediatorInstruction\Commands\NewsChannelSubscribersCommand\Queries\" />
+    <ProjectReference Include="..\..\ApplicationDatabaseContext\DatabaseEngine\DatabaseEngine.csproj" />
+    <ProjectReference Include="..\..\Shared\Integrations\Integrations.csproj" />
   </ItemGroup>
 
 </Project>
