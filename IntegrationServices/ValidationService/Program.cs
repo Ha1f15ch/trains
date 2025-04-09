@@ -1,7 +1,5 @@
 using RabbitMQ.Client;
 using ValidationService;
-using Microsoft.Extensions.Configuration;
-using System.IO;
 
 class Program
 {

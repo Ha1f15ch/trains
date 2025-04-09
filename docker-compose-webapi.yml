@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP порт
+      - "15672:15672"  # Management UI порт
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app-network
+
+  # PostgreSQL
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: TestDatabase
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Pass1!2@
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # WebAppTrain (основное приложение)
+  webapi:
+    build:
+      context: .
+      dockerfile: WebAppTrain/Dockerfile
+    container_name: webapi
+    depends_on:
+      - rabbitmq
+      - postgres
+    environment:
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=TestDatabase;Username=postgres;Password=Pass1!2@;Port=5432
+      RabbitMQ__HostName: rabbitmq
+      KERBEROS_REALM: LOCALDOMAIN.COM # Добавляем переменную для Kerberos, было YOUR_REALM 
+    ports:
+      - "8080:8080" # Проброс порта для доступа к API извне
+    networks:
+      - app-network
+
+  # Nginx
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"  # Порт для доступа к API
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - webapi
+    networks:
+      - app-network
+
+# Сети
+networks:
+  app-network:
+    driver: bridge
+
+# Объемы данных
+volumes:
+  postgres_data:

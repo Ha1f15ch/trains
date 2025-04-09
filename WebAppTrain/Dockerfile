@@ -1,9 +1,24 @@
 # Этап базового образа
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+
+# Устанавливаем библиотеку libgssapi_krb5.so.2
+USER root
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Создаем файл krb5.conf с использованием переменной окружения
+RUN echo "[libdefaults]\n\
+    default_realm = ${KERBEROS_REALM}\n\
+    dns_lookup_realm = false\n\
+    dns_lookup_kdc = true" > /etc/krb5.conf
+
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
+
+# Копируем статические файлы
+COPY WebAppTrain/wwwroot/swagger /app/wwwroot/swagger
 
 # Этап сборки
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
