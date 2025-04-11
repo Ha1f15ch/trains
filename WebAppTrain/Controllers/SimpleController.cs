@@ -197,5 +197,11 @@ namespace WebApiApp.Controllers
 
             return Ok(result);
 		}
+
+        [HttpGet("hello")]
+        public async Task<IActionResult> GetHelloForTest()
+        {
+            return Ok("API is work !");
+        }
     }
 }

@@ -74,7 +74,7 @@ builder.Services.AddCors(options =>
 	options.AddPolicy("AllowSpecificOrigin",
 		builder =>
 		{
-			builder.WithOrigins("http://localhost:5011", "https://localhost:7125")
+			builder.WithOrigins("http://localhost:5011", "https://localhost:7125", "http://localhost:5000")
 								 .AllowAnyMethod()
 								 .AllowAnyHeader();
         }
@@ -132,27 +132,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "My train API v1");
-        c.RoutePrefix = "swagger";
     });
 }
 
-app.UseHttpsRedirection();
-
-app.UseStaticFiles(new StaticFileOptions
-{
-	FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")),
-	RequestPath = "/swagger"
-});
-
-app.UseRouting();
-app.UseHangfireDashboard(); // Включить поддержку hangfire дашбордов
 
 app.UseCors("AllowSpecificOrigin");
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
 // Все контроллеры требуют аутентификацию
 app.MapControllers();
+
+app.UseHangfireDashboard(); // Включить поддержку hangfire дашбордов
 
 // Явная инициализация RabbitMqService
 using (var scope = app.Services.CreateScope())
@@ -176,11 +168,11 @@ using (var scope = app.Services.CreateScope())
         await context.Database.EnsureCreatedAsync();
         await context.Database.CanConnectAsync();
 
-		logger.LogInformation("Подключение к БД выполнено успешно");
+		logger.LogInformation("Connect to database is completed successful");
     }
     catch (Exception ex)
     {
-		logger.LogError(ex, $"Подключение к БД не выполнено. Возникшая ошибка: {ex.Message}");
+		logger.LogError(ex, $"Connect to database is not complete, process failed. Error: {ex.Message}");
     }
 }
 
@@ -197,17 +189,17 @@ using (var scope = app.Services.CreateScope())
         if(rabbitMqConnection.IsOpen)
         {
 
-			logger.LogInformation("Подключение к RabbitMQ выполнено успешно");
+			logger.LogInformation("Connect to RabbitMQ complete is successful");
 		}
         else
         {
-            throw new Exception("Ну удалось установить соединение с RabbitMQ");
+            throw new Exception("Connection to RabbitMQ is not completed successful");
         }
 
     }
     catch(Exception ex)
     {
-		logger.LogError(ex, $"Подключение к RabbitMQ не выполнено. Возникшая ошибка: {ex.Message}");
+		logger.LogError(ex, $"Connection to RabbitMQ is not completed successful. Error: {ex.Message}");
 		throw;
 	}
 }
