@@ -167,12 +167,14 @@ using (var scope = app.Services.CreateScope())
         // проверка на то, создана ли БД и попытка подключиться к ней
         await context.Database.EnsureCreatedAsync();
         await context.Database.CanConnectAsync();
-
 		logger.LogInformation("Connect to database is completed successful");
+
+        await context.Database.MigrateAsync();
+        logger.LogInformation($"Migration is completed successfully");
     }
     catch (Exception ex)
     {
-		logger.LogError(ex, $"Connect to database is not complete, process failed. Error: {ex.Message}");
+		logger.LogError(ex, $"Connect to database is not complete or migration is failed, process failed. Error: {ex.Message}");
     }
 }
 

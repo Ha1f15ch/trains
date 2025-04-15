@@ -51,6 +51,16 @@ services:
     networks:
       - app-network
 
+# Сервис валидации
+  validationservice:
+    image: ${DOCKER_REGISTRY-}validationservice
+    container_name: validationservice
+    build:
+      context: .
+      dockerfile: IntegrationServices/ValidationService/Dockerfile
+    networks:
+      - app-network
+
 # Объемы данных
 volumes:
   postgres_data:

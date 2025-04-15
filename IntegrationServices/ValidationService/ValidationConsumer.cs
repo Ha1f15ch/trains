@@ -58,6 +58,9 @@ namespace ValidationService
 					var message = JsonSerializer.Deserialize<dynamic>(Encoding.UTF8.GetString(body));
 
 					var requestId = message.RequestId.ToString();
+
+					Console.WriteLine($"\nrequestId = {requestId} \nmessage = {message}");
+
 					var data = message.Data;
 
 					// Выполняем валидацию
@@ -83,10 +86,14 @@ namespace ValidationService
 					);
 
 					Console.WriteLine($"Validation result sent for RequestId: {requestId}");
+
+					// Подтверждаем обработку сообщения
+					await _channel.BasicAckAsync(ea.DeliveryTag, false);
 				}
 				catch (Exception ex)
 				{
 					Console.WriteLine($"Error processing message: {ex.Message}");
+					await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
 				}
 			};
 

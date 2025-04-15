@@ -25,7 +25,9 @@ namespace BusinesEngine.Services
 			if (items.Count == 0)
 			{
 				_logger.LogWarning("Попытка сериализации пустого списка объектов");
-				throw new ArgumentNullException("Для сериализации объектов переданы некорректные данные");
+				//throw new ArgumentNullException("Для сериализации объектов переданы некорректные данные");
+				_logger.LogInformation($"Возвращаем {items.Count} объектов");
+				return JsonConvert.SerializeObject(new List<T>(), _jsonSerializeSettings);
 			}
 
 			_logger.LogInformation("Сериализация списка объектов. Количество элементов: {Count}", items.Count);
