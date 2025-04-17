@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using DTOModels.ValidationService;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
@@ -43,9 +44,9 @@ namespace ValidationService
 
 		public void StartConsuming()
 		{
-			if(_channel == null)
+			if(_channel == null || !_channel.IsOpen)
 			{
-				throw new InvalidOperationException("Канал не инициализирован.");
+				throw new InvalidOperationException("Канал RabbitMQ закрыт или не существует.");
 			}
 
 			var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -55,19 +56,27 @@ namespace ValidationService
 				try
 				{
 					var body = ea.Body.ToArray();
-					var message = JsonSerializer.Deserialize<dynamic>(Encoding.UTF8.GetString(body));
 
-					var requestId = message.RequestId.ToString();
+					var messageJson = Encoding.UTF8.GetString(body);
 
-					Console.WriteLine($"\nrequestId = {requestId} \nmessage = {message}");
+					// Строго типизированная десериализация
+					var message = JsonSerializer.Deserialize<ValidationRequest>(messageJson);
 
-					var data = message.Data;
+					if (message == null || string.IsNullOrEmpty(message.RequestId))
+					{
+						Console.WriteLine($"Невозможно десериализовать сообщение или отсутствует RequestId: {messageJson}");
+						return;
+					}
+
+					var requestId = message.RequestId;
+
+					Console.WriteLine($"Получен запрос на валидацию. RequestId: {requestId}");
 
 					// Выполняем валидацию
-					bool validationResult = ValidateData(data);
+					bool validationResult = ValidateData(message.Data);
 
 					// Формируем ответ
-					var responseMessage = new
+					var responseMessage = new ValidationResponse
 					{
 						RequestId = requestId,
 						ValidationResult = validationResult
@@ -75,17 +84,25 @@ namespace ValidationService
 
 					var responseBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(responseMessage));
 
+					if (_channel == null || !_channel.IsOpen)
+					{
+						throw new InvalidOperationException("Канал RabbitMQ закрыт или не существует.");
+					}
+
 					// Отправляем результат в очередь validation.results
 					var properties = new BasicProperties();
+					properties.Persistent = true;
+
 					await _channel.BasicPublishAsync<BasicProperties>(
 						exchange: "",
 						routingKey: "validation.results",
 						mandatory: false,
-						basicProperties: null,
+						basicProperties: properties,
 						body: responseBytes
 					);
 
 					Console.WriteLine($"Validation result sent for RequestId: {requestId}");
+					Console.WriteLine($"Отправляем подтверждение обработки сообщения RequestId: {requestId}");
 
 					// Подтверждаем обработку сообщения
 					await _channel.BasicAckAsync(ea.DeliveryTag, false);
@@ -97,10 +114,10 @@ namespace ValidationService
 				}
 			};
 
-			_channel.BasicConsumeAsync(queue: "validation.requests", autoAck: true, consumer: consumer);
+			_channel.BasicConsumeAsync(queue: "validation.requests", autoAck: false, consumer: consumer);
 		}
 
-		private bool ValidateData(dynamic data)
+		private bool ValidateData(NewUserData data)
 		{
 			var name = data.Name?.ToString();
 			var email = data.Email?.ToString();

@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Integrations.RabbitMqInfrastructure;
 using System.Text.Json;
+using DTOModels.ValidationService;
 
 namespace BusinesEngine.MediatorInstruction.Handlers.UsersHandlers
 {
@@ -34,21 +35,23 @@ namespace BusinesEngine.MediatorInstruction.Handlers.UsersHandlers
 				var requestR = Guid.NewGuid().ToString();
 
 				//Отправляем данные на валидацию через RabbitMQ
-				await _rabbitMqService.PublishValidationRequestAsync(requestR, new
+				await _rabbitMqService.PublishValidationRequestAsync(requestR, new NewUserData
 				{
-					request.Name,
-					request.Email,
-					request.Password
+					Name = request.Name,
+					Email = request.Email,
+					Password = request.Password
 				});
 
 				// получаем результат валидации 
-				var validationResult = await _rabbitMqService.GetValidationResultAsync(requestR);
+				var validationResponse = await _rabbitMqService.GetValidationResultAsync(requestR);
 
-				if(!JsonSerializer.Deserialize<bool>(validationResult)) // Если валидация не пройдена
+				if (validationResponse == null || !validationResponse.ValidationResult) // Если валидация не пройдена
 				{
-					_logger.LogWarning($"Ошибка валидации. Параметры Name = {request.Name}, Email = {request.Email}, Password = {request.Password}");
+					_logger.LogWarning($"Ошибка валидации. Валидация не пройдена. RequestId: {requestR}");
 					return null;
 				}
+
+				_logger.LogInformation($"Валидация выполнена успешно. Вызываем процедуру создания пользователя по переданным параметрам . . . .");
 
 				var newUser = await _userRepository.CreateNewUser(
 					request.Name,

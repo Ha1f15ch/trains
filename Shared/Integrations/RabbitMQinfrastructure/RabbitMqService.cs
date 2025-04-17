@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using DTOModels.ValidationService;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Core.DependencyInjection;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -40,7 +41,7 @@ namespace Integrations.RabbitMqInfrastructure
 			}
 		}
 
-		public async Task PublishValidationRequestAsync(string requestId, object data) //Отправка данных на валидацию.
+		public async Task PublishValidationRequestAsync(string requestId, NewUserData data) //Отправка данных на валидацию.
 		{
 			// Проверяем состояние канала
 			if (_channel == null || !_channel.IsOpen)
@@ -64,10 +65,16 @@ namespace Integrations.RabbitMqInfrastructure
 				Console.WriteLine($"\nRequestId = {requestId}\n");
 			}
 
-			var message = new // Создаем объект сообщения.
+			var message = new ValidationRequest // Создаем объект сообщения.
 			{
 				RequestId = requestId, // Уникальный идентификатор запроса
-				Data = data // Данные для валидации.
+				Data = new NewUserData // Используем строго типизированный объект
+				{
+					Name = data.Name,
+					Email = data.Email,
+					Password = data.Password
+				}
+				// Данные для валидации.
 			};
 
 			var jsonMessage = JsonSerializer.Serialize(message);
@@ -79,26 +86,10 @@ namespace Integrations.RabbitMqInfrastructure
 
 			try
 			{
-				// Проверяем существование очереди
-				try
-				{
-					await _channel.QueueDeclarePassiveAsync("validation.requests");
-					Console.WriteLine("Очередь 'validation.requests' существует.");
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine($"Очередь 'validation.requests' не существует: {ex.Message}");
-					await _channel.QueueDeclareAsync(
-						queue: "validation.requests",
-						durable: false,
-						exclusive: false,
-						autoDelete: false,
-						arguments: null
-					);
-					Console.WriteLine("Очередь 'validation.requests' успешно объявлена.");
-				}
-
+				// Проверяем существование очереди	
 				var properties = new BasicProperties();
+				properties.Persistent = true; // Сохранять сообщения на хосте
+
 				await _channel.BasicPublishAsync<BasicProperties>(
 					exchange: "",
 					routingKey: "validation.requests",
@@ -116,44 +107,74 @@ namespace Integrations.RabbitMqInfrastructure
 			}
 		}
 
-		public async Task<string> GetValidationResultAsync(string requestId) //Получение результата валидации
+		public async Task<ValidationResponse?> GetValidationResultAsync(string requestId) // Получение результата валидации
 		{
-			if(_channel == null)
+			if (_channel == null)
 			{
 				throw new InvalidOperationException("Канал не инициализирован");
 			}
 
-			var result = "";
+			var tcs = new TaskCompletionSource<ValidationResponse?>();
 
-			var consumer = new AsyncEventingBasicConsumer(_channel); // Создаем асинхронного потребителя для получения сообщений.
-			var tcs = new TaskCompletionSource<string>(); // Создаем TaskCompletionSource для ожидания результата.
+			var consumer = new AsyncEventingBasicConsumer(_channel);
 
-			consumer.ReceivedAsync += async (model, ea) => // Подписываемся на событие получения сообщения.
+			consumer.ReceivedAsync += async (model, ea) =>
 			{
 				try
 				{
-					var body = ea.Body.ToArray(); // Извлекаем тело сообщения (массив байтов).
-					var message = JsonSerializer.Deserialize<dynamic>(Encoding.UTF8.GetString(body)); // Десериализуем сообщение из JSON.
+					var body = ea.Body.ToArray();
+					var messageJson = Encoding.UTF8.GetString(body);
 
-					if (message.RequestId.ToString() == requestId) // Проверяем, соответствует ли RequestId ожидаемому.
+					ValidationResponse? message = null;
+					try
 					{
-						result = message.ValidationResult.ToString(); // Извлекаем ValidationResult из сообщения.
-						tcs.TrySetResult(result); // Устанавливаем результат в TaskCompletionSource.
+						message = JsonSerializer.Deserialize<ValidationResponse>(messageJson);
+
+						if (message == null || string.IsNullOrEmpty(message.RequestId))
+						{
+							Console.WriteLine($"Невозможно десериализовать сообщение: {messageJson}");
+							return;
+						}
+					}
+					catch (JsonException ex)
+					{
+						Console.WriteLine($"Ошибка при десериализации JSON: {ex.Message}. Полученные данные: {messageJson}");
+						return;
+					}
+
+					if (message.RequestId == requestId) // Если RequestId совпадает, завершаем ожидание (TaskCompletionSource)
+					{
+						tcs.TrySetResult(message);
 					}
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
+					Console.WriteLine($"Ошибка при обработке сообщения: {ex.Message}");
 					tcs.TrySetException(ex);
 				}
 			};
 
-			await _channel.BasicConsumeAsync( // Начинаем получать сообщения из очереди.
+			// Подписываемся на очередь
+			var consumerTag = await _channel.BasicConsumeAsync(
 				queue: "validation.results",
-				autoAck: true, // Автоматически подтверждаем получение сообщения.
+				autoAck: true,
 				consumer: consumer
 			);
 
-			return await tcs.Task;
+			// Добавляем таймаут на случай, если сообщение не придет
+			var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30)); // Таймаут 30 секунд
+			var resultTask = tcs.Task;
+
+			var completedTask = await Task.WhenAny(resultTask, timeoutTask);
+			if (completedTask == timeoutTask)
+			{
+				// Отписка при таймауте
+				await _channel.BasicCancelAsync(consumerTag);
+				throw new TimeoutException("Получение результата валидации превысило время ожидания.");
+			}
+
+			await _channel.BasicCancelAsync(consumerTag);
+			return await resultTask;
 		}
 
 		public void Dispose()
