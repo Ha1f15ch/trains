@@ -17,15 +17,15 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Строка подключения к БД
+// РЎС‚СЂРѕРєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р”
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-// Строка подключения к БД для hangfire
+// РЎС‚СЂРѕРєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р” РґР»СЏ hangfire
 var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection");
-//Инициализация настроек логирования serilog
+//РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РЅР°СЃС‚СЂРѕРµРє Р»РѕРіРёСЂРѕРІР°РЅРёСЏ serilog
 Common.Logging.LoggingConfiguration.Configure();
 
 builder.Host.UseSerilog();
-// настройка Mediatr
+// РЅР°СЃС‚СЂРѕР№РєР° Mediatr
 builder.Services.AddMediatR(cfg =>
 {
 	cfg.RegisterServicesFromAssembly(typeof(CreateNewUserCommand).Assembly);
@@ -33,7 +33,7 @@ builder.Services.AddMediatR(cfg =>
 
 try
 {
-    // Конфигурация подключения к сервису RabbitMQ - развернут локально на ПК 
+    // РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє СЃРµСЂРІРёСЃСѓ RabbitMQ - СЂР°Р·РІРµСЂРЅСѓС‚ Р»РѕРєР°Р»СЊРЅРѕ РЅР° РџРљ 
     builder.Services.AddSingleton<IConnection>(provider =>
     {
         var factory = new ConnectionFactory
@@ -46,7 +46,7 @@ try
         return Task.Run(() => factory.CreateConnectionAsync()).GetAwaiter().GetResult();
     });
 
-	// регистрация и запуск RabbitMQ
+	// СЂРµРіРёСЃС‚СЂР°С†РёСЏ Рё Р·Р°РїСѓСЃРє RabbitMQ
 	builder.Services.AddSingleton<RabbitMqService>(provider =>
 	{
 		var connection = provider.GetRequiredService<IConnection>();
@@ -55,14 +55,14 @@ try
 }
 catch (Exception ex)
 {
-	Console.WriteLine($"Ошибка инициализации подключения к сервису RabbitMQ - {ex.Message}");
+	Console.WriteLine($"РћС€РёР±РєР° РёРЅРёС†РёР°Р»РёР·Р°С†РёРё РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє СЃРµСЂРІРёСЃСѓ RabbitMQ - {ex.Message}");
 }
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
 );
-// Нужно для того, чтобы возвращаемые объекты - типа моделей из БД (у которых есть референсные значения, навигационные свойства) не зацикливались сами на себя 
+// РќСѓР¶РЅРѕ РґР»СЏ С‚РѕРіРѕ, С‡С‚РѕР±С‹ РІРѕР·РІСЂР°С‰Р°РµРјС‹Рµ РѕР±СЉРµРєС‚С‹ - С‚РёРїР° РјРѕРґРµР»РµР№ РёР· Р‘Р” (Сѓ РєРѕС‚РѕСЂС‹С… РµСЃС‚СЊ СЂРµС„РµСЂРµРЅСЃРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ, РЅР°РІРёРіР°С†РёРѕРЅРЅС‹Рµ СЃРІРѕР№СЃС‚РІР°) РЅРµ Р·Р°С†РёРєР»РёРІР°Р»РёСЃСЊ СЃР°РјРё РЅР° СЃРµР±СЏ 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -90,7 +90,7 @@ builder.Services.AddSwaggerGen(
         {
             Title = "My train API",
             Version = "v1",
-            Description = "API для практики и применения подходов и технологий из roadmap-a"
+            Description = "API РґР»СЏ РїСЂР°РєС‚РёРєРё Рё РїСЂРёРјРµРЅРµРЅРёСЏ РїРѕРґС…РѕРґРѕРІ Рё С‚РµС…РЅРѕР»РѕРіРёР№ РёР· roadmap-a"
         });
     });
 
@@ -103,7 +103,7 @@ builder.Services.AddTransient<INewsChannelRepository, NewsChannelRepository>();
 builder.Services.AddTransient<INewsChannelsPostsRepository, NewsChannelsPostsRepository>();
 builder.Services.AddTransient<INewsChannelsSubscribersRepository, NewsChannelsSubscribersRepository>();
 
-//игнорировать дефолт авторизацию в контроллере (api клиенте)
+//РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ РґРµС„РѕР»С‚ Р°РІС‚РѕСЂРёР·Р°С†РёСЋ РІ РєРѕРЅС‚СЂРѕР»Р»РµСЂРµ (api РєР»РёРµРЅС‚Рµ)
 /*builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
 builder.Services.AddAuthorization(options =>
@@ -112,10 +112,10 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });*/
 
-// настройка hangfire 
+// РЅР°СЃС‚СЂРѕР№РєР° hangfire 
 builder.Services.AddHangfire(options =>
 {
-    //Необходимо создавать БД из connectionString до того, как начнется обращение по этим данным к БД
+    //РќРµРѕР±С…РѕРґРёРјРѕ СЃРѕР·РґР°РІР°С‚СЊ Р‘Р” РёР· connectionString РґРѕ С‚РѕРіРѕ, РєР°Рє РЅР°С‡РЅРµС‚СЃСЏ РѕР±СЂР°С‰РµРЅРёРµ РїРѕ СЌС‚РёРј РґР°РЅРЅС‹Рј Рє Р‘Р”
     options.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new PostgreSqlStorageOptions
     {
         PrepareSchemaIfNecessary = true
@@ -141,19 +141,19 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Все контроллеры требуют аутентификацию
+// Р’СЃРµ РєРѕРЅС‚СЂРѕР»Р»РµСЂС‹ С‚СЂРµР±СѓСЋС‚ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёСЋ
 app.MapControllers();
 
-app.UseHangfireDashboard(); // Включить поддержку hangfire дашбордов
+app.UseHangfireDashboard(); // Р’РєР»СЋС‡РёС‚СЊ РїРѕРґРґРµСЂР¶РєСѓ hangfire РґР°С€Р±РѕСЂРґРѕРІ
 
-// Явная инициализация RabbitMqService
+// РЇРІРЅР°СЏ РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ RabbitMqService
 using (var scope = app.Services.CreateScope())
 {
 	var rabbitMqService = scope.ServiceProvider.GetRequiredService<RabbitMqService>();
 	await rabbitMqService.InitializeAsync();
 }
 
-// Проверка доступа БД перед запуском приложения
+// РџСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїР° Р‘Р” РїРµСЂРµРґ Р·Р°РїСѓСЃРєРѕРј РїСЂРёР»РѕР¶РµРЅРёСЏ
 using (var scope = app.Services.CreateScope())
 {
     var service = scope.ServiceProvider;
@@ -164,7 +164,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = service.GetRequiredService<AppDbContext>();
 
-        // проверка на то, создана ли БД и попытка подключиться к ней
+        // РїСЂРѕРІРµСЂРєР° РЅР° С‚Рѕ, СЃРѕР·РґР°РЅР° Р»Рё Р‘Р” Рё РїРѕРїС‹С‚РєР° РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ Рє РЅРµР№
         await context.Database.EnsureCreatedAsync();
         await context.Database.CanConnectAsync();
 		logger.LogInformation("Connect to database is completed successful");
@@ -178,7 +178,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// проверяем подключение к RabbitMq
+// РїСЂРѕРІРµСЂСЏРµРј РїРѕРґРєР»СЋС‡РµРЅРёРµ Рє RabbitMq
 using (var scope = app.Services.CreateScope())
 {
     var service = scope.ServiceProvider;
