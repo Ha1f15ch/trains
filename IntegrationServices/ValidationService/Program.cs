@@ -5,19 +5,19 @@ class Program
 {
 	static async Task Main(string[] args)
 	{
-		// Загружаем конфигурацию из локального appsettings.json
+		// Р—Р°РіСЂСѓР¶Р°РµРј РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ РёР· Р»РѕРєР°Р»СЊРЅРѕРіРѕ appsettings.json
 		var configuration = new ConfigurationBuilder()
-			.SetBasePath(Directory.GetCurrentDirectory()) // Текущая рабочая директория
+			.SetBasePath(Directory.GetCurrentDirectory()) // РўРµРєСѓС‰Р°СЏ СЂР°Р±РѕС‡Р°СЏ РґРёСЂРµРєС‚РѕСЂРёСЏ
 			.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
 			.Build();
 
-		// Проверка загруженных значений
+		// РџСЂРѕРІРµСЂРєР° Р·Р°РіСЂСѓР¶РµРЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№
 		Console.WriteLine($"RabbitMQ HostName: {configuration["RabbitMQ:HostName"]}");
 		Console.WriteLine($"RabbitMQ UserName: {configuration["RabbitMQ:UserName"]}");
 		Console.WriteLine($"RabbitMQ Password: {configuration["RabbitMQ:Password"]}");
 		Console.WriteLine($"RabbitMQ Port: {configuration["RabbitMQ:Port"]}");
 
-		// Загружаем конфигурацию RabbitMQ
+		// Р—Р°РіСЂСѓР¶Р°РµРј РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ RabbitMQ
 		var factory = new ConnectionFactory
 		{
 			HostName = configuration["RabbitMQ:HostName"],
@@ -26,14 +26,14 @@ class Program
 			Port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672")
 		};
 
-		// Асинхронное создание соединения
+		// РђСЃРёРЅС…СЂРѕРЅРЅРѕРµ СЃРѕР·РґР°РЅРёРµ СЃРѕРµРґРёРЅРµРЅРёСЏ
 		using var connection = await factory.CreateConnectionAsync();
 		var validationConsumer = new ValidationConsumer(connection);
 
-		// Инициализация канала и очередей
+		// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РєР°РЅР°Р»Р° Рё РѕС‡РµСЂРµРґРµР№
 		await validationConsumer.InitializeAsync();
 
-		// Запуск обработки сообщений
+		// Р—Р°РїСѓСЃРє РѕР±СЂР°Р±РѕС‚РєРё СЃРѕРѕР±С‰РµРЅРёР№
 		validationConsumer.StartConsuming();
 
 		Console.WriteLine("Validation service is running. Press [Enter] to exit.");
